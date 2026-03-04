@@ -534,35 +534,27 @@
   const renderRole = () => roleText.textContent = (role === "host" ? "なこ" : "ゲスト");
   renderRole();
 
-  // ---------- presence (入室 0/2) local heartbeat ----------
+  
+  // ---------- presence (入室 x/2) using Supabase-synced timestamps ----------
   const presenceTextEl = document.getElementById("presenceText");
   const PRESENCE_WINDOW_MS = 90 * 1000;
-  const presenceKey = (who) => `presence:${room}:${who}`;
 
-  const setPresence = (who) => {
-    try { localStorage.setItem(presenceKey(who), String(Date.now())); } catch {}
+  const ts = (iso) => {
+    if (!iso) return 0;
+    const t = new Date(iso).getTime();
+    return Number.isFinite(t) ? t : 0;
   };
-  const getPresence = (who) => {
-    const v = localStorage.getItem(presenceKey(who));
-    const n = v ? Number(v) : 0;
-    return Number.isFinite(n) ? n : 0;
-  };
+
   const renderPresence = () => {
-    const t = Date.now();
-    const hostOn = (t - getPresence("host")) < PRESENCE_WINDOW_MS;
-    const guestOn = (t - getPresence("guest")) < PRESENCE_WINDOW_MS;
-    const on = (hostOn?1:0) + (guestOn?1:0);
+    const now = Date.now();
+    const hostAt = ts(load("naco_status_at", null));   // なこ側の心拍
+    const guestAt = ts(load("user_status_at", null)); // ゲスト側の心拍
+    const hostOn = hostAt && (now - hostAt) < PRESENCE_WINDOW_MS;
+    const guestOn = guestAt && (now - guestAt) < PRESENCE_WINDOW_MS;
+    const on = (hostOn ? 1 : 0) + (guestOn ? 1 : 0);
     if (presenceTextEl) presenceTextEl.textContent = `${on}/2`;
   };
-  const heartbeatPresence = () => {
-    setPresence(role === "host" ? "host" : "guest");
-    renderPresence();
-  };
-  ["mousemove","mousedown","keydown","touchstart","scroll","visibilitychange","focus"].forEach(ev=>{
-    window.addEventListener(ev, heartbeatPresence, {passive:true});
-  });
-  setInterval(heartbeatPresence, 20*1000);
-  heartbeatPresence();
+
   const themeBtn = document.getElementById("themeToggle");
 let theme = load("theme","dark");
 const applyTheme = ()=>document.documentElement.setAttribute("data-theme", theme);
@@ -670,6 +662,8 @@ document.getElementById("toggleRole").addEventListener("click", () => {
     nacoShow.textContent = ns;
     nacoAt.textContent = na ? timeAgo(na) : "—";
   };
+  // keep presence in sync with latest timestamps
+  renderPresence();
   renderStatuses();
 
 
@@ -908,6 +902,38 @@ document.getElementById("toggleRole").addEventListener("click", () => {
     const { error } = await sb.from("naco_rooms").upsert(payload, { onConflict:"room_id" });
     if (error) throw error;
   };
+
+  
+  // ---------- role heartbeat (keeps 入室 2/2 even when idle/tab throttled) ----------
+  const pingRoleRemote = async () => {
+    if (!supabaseReady) return;
+    const nowIso = new Date().toISOString();
+    // Use status_updated_at columns as "last_active" heartbeats.
+    // IMPORTANT: update only your own columns to avoid overwriting the other person's state.
+    const isHost = (role === "host");
+    const patch = isHost
+      ? { room_id: room, naco_status: load("naco_status","") || "", naco_status_updated_at: nowIso, updated_at: nowIso }
+      : { room_id: room, user_status: load("user_status","") || "", user_status_updated_at: nowIso, updated_at: nowIso };
+    try{
+      const { error } = await sb.from("naco_rooms").upsert(patch, { onConflict:"room_id" });
+      if (error) throw error;
+      // mirror heartbeat locally so presence updates immediately
+      if (isHost) save("naco_status_at", nowIso); else save("user_status_at", nowIso);
+      renderPresence();
+    }catch(e){
+      // keep UI calm; ERR pill will show
+      throw e;
+    }
+  };
+
+  const schedulePing = () => {
+    // ping immediately, then every 25s; also ping when tab becomes visible
+    pingRoleRemote().catch(()=>{});
+  };
+  setInterval(()=>{ pingRoleRemote().catch(()=>{}); }, 25*1000);
+  document.addEventListener("visibilitychange", ()=>{ if (!document.hidden) schedulePing(); });
+  window.addEventListener("focus", schedulePing);
+
 
   let statusChannel = null;
   const startStatusRealtime = () => {
@@ -1365,14 +1391,30 @@ document.querySelectorAll("[data-status]").forEach(btn => {
   // ---------- header actions ----------
   document.getElementById("refreshNow").addEventListener("click", ()=>{
     renderStatuses(); renderTea(); renderPomo(); renderIdle(); try{ updateMini(); }catch{} try{ renderOneLine(); }catch{} try{ renderLife(); }catch{}
-  });
-  document.getElementById("copyLink").addEventListener("click", async ()=>{
+
+  document.getElementById("copyLink").addEventListener("click", async () => {
+    const url = location.origin + location.pathname + "#" + room;
     try{
-      const url = location.origin + location.pathname + "#" + room;
       await navigator.clipboard.writeText(url);
-    }catch{}
+      showToast("共有リンクをコピーしたよ");
+      return;
+    }catch(e){}
+    try{
+      const tmp = document.createElement("input");
+      tmp.value = url;
+      tmp.style.position = "fixed";
+      tmp.style.left = "-9999px";
+      tmp.style.top = "0";
+      document.body.appendChild(tmp);
+      tmp.focus(); tmp.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(tmp);
+      if (ok){ showToast("共有リンクをコピーしたよ"); return; }
+    }catch(e){}
+    window.prompt("共有リンク（手動でコピーしてね）", url);
   });
 
+  });
   // init sync if already on (mostly for https)
   (async()=>{ if (syncOn) await tryInitSupabase(); })();
 })();
