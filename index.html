@@ -1169,22 +1169,49 @@ document.querySelectorAll("[data-status]").forEach(btn => {
   renderPomo();
   try{ renderStartPause(); }catch{}
 
-  const beep = () => {
-    if (!soundOn) return;
-    try{
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const audio = {
+    ctx: null,
+    unlocked: false,
+    ensure() {
+      if (this.ctx) return this.ctx;
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return null;
+      this.ctx = new Ctx();
+      return this.ctx;
+    },
+    unlock() {
+      const ctx = this.ensure();
+      if (!ctx) return;
+      // resume is required on some browsers until a user gesture happens
+      ctx.resume && ctx.resume().catch(()=>{});
+      this.unlocked = true;
+    },
+    beep(freq=880, dur=0.28, vol=0.16){
+      if (!soundOn) return;
+      const ctx = this.ensure();
+      if (!ctx) return;
+      // If still suspended, try resume (may fail without gesture)
+      if (ctx.state === "suspended") { ctx.resume().catch(()=>{}); }
+      const t0 = ctx.currentTime;
       const o = ctx.createOscillator();
       const g = ctx.createGain();
-      o.type="sine"; o.frequency.value=880;
-      g.gain.value=0.0001;
+      o.type = "sine";
+      o.frequency.setValueAtTime(freq, t0);
+      g.gain.setValueAtTime(0.0001, t0);
       o.connect(g); g.connect(ctx.destination);
-      o.start();
-      g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
-      o.stop(ctx.currentTime + 0.38);
-      setTimeout(()=>ctx.close().catch(()=>{}), 500);
-    }catch{}
+      o.start(t0);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.001, vol), t0 + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.stop(t0 + dur + 0.03);
+    }
   };
+
+  // Unlock audio on first user interaction (required for many browsers)
+  window.addEventListener("pointerdown", ()=> audio.unlock(), { once:true });
+  window.addEventListener("keydown", ()=> audio.unlock(), { once:true });
+
+  const beep = () => audio.beep(880, 0.32, 0.14);
+
 
   const nextBreakSeconds = () => {
     if (!autoLongBreak) return breakMin*60;
