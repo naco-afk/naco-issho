@@ -406,6 +406,13 @@
 </div>
 
 <script>
+
+  // safe event binder
+  function on(id, evt, fn){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener(evt, fn);
+  }
 (async () => {
   // ---------- utilities ----------
   const key = (k) => "pw_" + room + "_" + k;
@@ -561,7 +568,7 @@ const applyTheme = ()=>document.documentElement.setAttribute("data-theme", theme
 applyTheme();
 themeBtn && themeBtn.addEventListener("click", ()=>{ theme = (theme==="dark")?"light":"dark"; save("theme", theme); applyTheme(); });
 
-document.getElementById("toggleRole").addEventListener("click", () => {
+on("toggleRole","click", () => {
     role = (role === "host") ? "guest" : "host";
     save("role", role);
     renderRole();
@@ -621,7 +628,7 @@ document.getElementById("toggleRole").addEventListener("click", () => {
     }
   };
 
-  document.getElementById("toggleSync").addEventListener("click", async () => {
+  on("toggleSync","click", async () => {
     syncOn = !syncOn;
     save("syncOn", syncOn);
     setSyncUi();
@@ -1283,7 +1290,7 @@ document.querySelectorAll("[data-status]").forEach(btn => {
 
   
   
-  document.getElementById("resetBtn").addEventListener("click", () => reset());
+  on("resetBtn","click", () => reset());
 
   const startPauseBtn = document.getElementById("startPauseBtn");
   const skipBtn = document.getElementById("skipBtn");
@@ -1364,13 +1371,13 @@ document.querySelectorAll("[data-status]").forEach(btn => {
 
   // keep label fresh when timer starts/stops automatically
 
-  document.getElementById("toggleSound").addEventListener("click", () => {
+  on("toggleSound","click", () => {
     soundOn = !soundOn; save("soundOn", soundOn); setSoundUi();
   });
-  document.getElementById("toggleAuto").addEventListener("click", () => {
+  on("toggleAuto","click", () => {
     autoNext = !autoNext; save("autoNext", autoNext); setAutoUi();
   });
-  document.getElementById("toggleLong").addEventListener("click", () => {
+  on("toggleLong","click", () => {
     autoLongBreak = !autoLongBreak; save("autoLongBreak", autoLongBreak); setLongUi();
   });
 
@@ -1397,13 +1404,13 @@ document.querySelectorAll("[data-status]").forEach(btn => {
   const mark = () => { lastActivityAt = Date.now(); };
   ["pointerdown","pointermove","keydown","scroll","touchstart"].forEach(evt=>window.addEventListener(evt, mark, {passive:true}));
 
-  document.getElementById("idleToggle").addEventListener("click", ()=>{
+  on("idleToggle","click", ()=>{
     idleOn = !idleOn; save("idleOn", idleOn); renderIdle();
   });
-  document.getElementById("idleMinus").addEventListener("click", ()=>{
+  on("idleMinus","click", ()=>{
     idleMinutes = Math.max(5, idleMinutes-5); save("idleMinutes", idleMinutes); renderIdle();
   });
-  document.getElementById("idlePlus").addEventListener("click", ()=>{
+  on("idlePlus","click", ()=>{
     idleMinutes = Math.min(240, idleMinutes+5); save("idleMinutes", idleMinutes); renderIdle();
   });
 
@@ -1416,10 +1423,10 @@ document.querySelectorAll("[data-status]").forEach(btn => {
   }, 5000);
 
   // ---------- header actions ----------
-  document.getElementById("refreshNow").addEventListener("click", ()=>{
+  on("refreshNow","click", ()=>{
     renderStatuses(); renderTea(); renderPomo(); renderIdle(); try{ updateMini(); }catch{} try{ renderOneLine(); }catch{} try{ renderLife(); }catch{}
 
-  document.getElementById("copyLink").addEventListener("click", async () => {
+  on("copyLink","click", async () => {
     const url = location.origin + location.pathname + "#" + room;
     try{
       await navigator.clipboard.writeText(url);
