@@ -1,1459 +1,504 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>なこといっしょ</title>
   <style>
     :root{
-      --bg:#0b1020;
-      --panel:#111a33;
-      --panel2:#0f1730;
-      --text:#f3f6ff;
-      --muted:#b6c4ef;
-      --stroke:rgba(255,255,255,.12);
-      --stroke2:rgba(255,255,255,.18);
-      --accent:#7ee6c4;
-      --accent2:#8aa6ff;
-      --danger:#ff6b9d;
-      --shadow:rgba(0,0,0,.36);
-      --chip:#17224a;
-      --chipOn:#223063;
+      --bg1:#0b1020; --bg2:#141b2e; --card:#1a2238cc; --line:#ffffff1a;
+      --text:#e8eeff; --muted:#b9c2e0; --btn:#ffffff14; --btn2:#ffffff22;
+      --bad:#ff5c5c; --ok:#6ee7a5; --warn:#ffd36e; --radius:18px; --pad:14px;
+      --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Hiragino Sans",
+              "Noto Sans JP", "Meiryo", sans-serif;
     }
-    [data-theme="light"]{
-      --bg1:#f2f4f8; --bg2:#e9eef4;
-      --card1:rgba(20,28,38,.06); --card2:rgba(20,28,38,.03);
-      --text:#0f172a; --muted:#334155;
-      --stroke:rgba(15,23,42,.14); --stroke2:rgba(15,23,42,.22);
-
-      --bg:#f7f9ff;
-      --panel:#ffffff;
-      --panel2:#f1f5ff;
-      --text:#0b1020;
-      --muted:#3a4a6a;
-      --stroke:rgba(11,16,32,.12);
-      --stroke2:rgba(11,16,32,.18);
-      --accent:#167a5e;
-      --accent2:#2d5bff;
-      --danger:#c22b5a;
-      --shadow:rgba(20,30,60,.10);
-      --chip:#eef3ff;
-      --chipOn:#dde8ff;
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; font-family:var(--font); color:var(--text); min-height:100vh;
+      background: radial-gradient(1200px 700px at 30% 20%, #233058, transparent 60%),
+                  radial-gradient(1000px 600px at 75% 30%, #2a1f4f, transparent 55%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
     }
-    *,*::before,*::after{box-sizing:border-box}
-    body{margin:0;background:radial-gradient(900px 520px at 20% 0%, rgba(138,166,255,.20), rgba(0,0,0,0) 60%),radial-gradient(900px 520px at 80% 20%, rgba(126,230,196,.14), rgba(0,0,0,0) 60%),linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0)),var(--bg);color:var(--text);font:15px/1.6 system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;}
-    .wrap{max-width:1080px;margin:22px auto;padding:0 14px;}
-    .top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
-    h1{font-size:18px;margin:0;font-weight:800}
-    .sub{color:var(--muted);font-size:12px;margin-top:2px}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--stroke);border-radius:999px;background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%);box-shadow: inset 0 1px 0 rgba(255,255,255,.10)}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
-    .btn{border:1px solid var(--stroke);background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));backdrop-filter: blur(12px) saturate(140%); -webkit-backdrop-filter: blur(12px) saturate(140%);color:var(--text);border-radius:14px;padding:10px 12px;cursor:pointer;box-shadow: inset 0 1px 0 rgba(255,255,255,.10)}
-    .btn:active{transform:translateY(1px)}
-    .btn.small{padding:8px 10px;border-radius:12px}
-    .btn.primary{border-color:rgba(126,230,196,.25)}
-    .btn.ok{border-color:rgba(138,166,255,.28)}
-    .btn.warn{border-color:rgba(255,122,162,.30)}
-    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-
-    .oneLineRow{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}
-    .oneLineRow input{
-      width:100%;
-      padding:12px 14px;
-      border-radius:16px;
-      border:1px solid var(--stroke);
-      background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
-      color:var(--text);
-      outline:none;
-      backdrop-filter: blur(12px) saturate(140%);
-      -webkit-backdrop-filter: blur(12px) saturate(140%);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.10);
+    .wrap{ max-width:980px; margin:0 auto; padding:18px; }
+    .topbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .brand{ font-weight:700; letter-spacing:.02em; }
+    .sub{ color:var(--muted); font-size:13px; }
+    .chips{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .chip{
+      padding:8px 12px; border:1px solid var(--line); background:#0b102666;
+      border-radius:999px; font-size:13px; display:flex; gap:8px; align-items:center;
     }
-    .oneLineSyncPill{padding:8px 10px}
-    [data-theme="light"] .oneLineRow input{ background:linear-gradient(180deg, rgba(255,255,255,.90), rgba(255,255,255,.70)); }
-    .oneLineRow input::placeholder{ color: color-mix(in srgb, var(--muted) 70%, transparent); }
-    @media (max-width: 640px){
-      .oneLineRow{grid-template-columns:1fr; }
-      .oneLineSyncPill{justify-self:start}
+    .chip b{ font-weight:700; }
+    .dot{ width:8px; height:8px; border-radius:50%; background:var(--muted); display:inline-block; }
+    .dot.ok{ background:var(--ok); }
+    .dot.bad{ background:var(--bad); }
+    .dot.warn{ background:var(--warn); }
+    .grid{ display:grid; grid-template-columns:1fr; gap:12px; }
+    @media (min-width: 900px){ .grid{ grid-template-columns: 1.2fr .8fr; } }
+    .card{
+      background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+      padding:var(--pad); backdrop-filter: blur(10px);
     }
-
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
-    @media (max-width: 920px){.grid{grid-template-columns:1fr}}
-    .card{border:1px solid var(--stroke);border-radius:22px;background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);box-shadow:0 18px 45px var(--shadow);padding:18px}
-    .label{color:var(--muted);font-size:13px}
-    .statusBox{border:1px solid var(--stroke);border-radius:18px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%);box-shadow: inset 0 1px 0 rgba(255,255,255,.10)}
-    .chip{border:1px solid var(--stroke);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 14px;background:rgba(255,255,255,.10);cursor:pointer;font-weight:700;color:var(--text);box-shadow: inset 0 1px 0 rgba(255,255,255,.10);line-height:1; white-space:nowrap;transform: translateZ(0);} 
-    .chip:hover{border-color:var(--stroke2);background:rgba(255,255,255,.12)}
-    .chip:active{transform:translateY(1px)}
-    .sep{height:1px;background:var(--stroke);margin:12px 0}
-    .big{font-size:44px;font-weight:800;letter-spacing:1px;text-shadow:0 2px 10px rgba(0,0,0,.35)}
-    .bar{height:10px;border-radius:999px;border:1px solid var(--stroke);background:rgba(0,0,0,.25);overflow:hidden}
-    .bar > div{height:100%;width:0% ;background:linear-gradient(90deg, rgba(126,230,196,.8), rgba(138,166,255,.8))}
-    select{appearance:none}
-  
-    /* now pill */
-    #nowPill{white-space:nowrap}
-    @media (max-width: 680px){ #nowPill{display:none} }
-
-    /* header polish */
-    #headerRight{gap:8px}
-    #headerRight .pill{padding:9px 11px}
-    #headerRight .btn.small{padding:8px 10px}
-    @media (max-width: 980px){
-      #headerRight{justify-content:flex-start}
+    .card h2{ margin:0 0 10px; font-size:14px; color:var(--muted); font-weight:700; letter-spacing:.02em; }
+    .row{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .row.space{ justify-content:space-between; }
+    .btn{
+      appearance:none; border:1px solid var(--line); background:var(--btn); color:var(--text);
+      padding:10px 12px; border-radius:999px; font-weight:600; cursor:pointer;
+      transition:.15s transform, .15s background; user-select:none;
     }
-    @media (max-width: 720px){
-      #headerRight .pill{padding:8px 10px}
-      #headerRight #nowPill{display:none}
+    .btn:hover{ background:var(--btn2); }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{ border-color:#ffffff26; background:#6c83ff22; }
+    .btn.small{ padding:7px 10px; font-size:12px; }
+    .btn.active{ outline:2px solid #6c83ff66; }
+    .mono{ font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .big{ font-size:54px; letter-spacing:.03em; font-weight:800; line-height:1; }
+    .sep{ height:1px; background:var(--line); margin:12px 0; }
+    .kv{ display:grid; grid-template-columns: 120px 1fr; gap:6px 10px; font-size:13px; }
+    .kv div:nth-child(odd){ color:var(--muted); }
+    input[type="text"]{
+      width:100%; border:1px solid var(--line); background:#0b102655; color:var(--text);
+      padding:10px 12px; border-radius:12px; outline:none;
     }
-
-    /* personal polish */
-    .card{padding:18px}
-    .sep{margin:14px 0}
-    .label{letter-spacing:.2px}
-    .statusBox{padding:14px}
-    .oneLineRow{grid-template-columns:1fr auto; gap:12px}
-    .oneLineSyncPill{justify-self:end}
-    /* make the one-line section breathe */
-    #oneLineInput{min-height:44px}
-    @media (max-width: 720px){
-      .oneLineRow{grid-template-columns:1fr}
-      .oneLineSyncPill{justify-self:start}
+    input[type="text"]::placeholder{ color:#b9c2e066; }
+    .pill{
+      padding:6px 10px; border:1px solid var(--line); border-radius:999px; font-size:12px;
+      color:var(--muted); background:#0b102655; display:inline-flex; gap:6px; align-items:center;
     }
-
-
-    /* guide polish */
-    .guideBox{display:grid; gap:12px}
-    .inputRow{display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center}
-    .inputRow .btn.small{min-width:72px}
-    .pill.tiny{padding:7px 10px; font-size:12px}
-    .lifeRow{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-    .lifeRow 
-    .miniGrid{display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center}
-    .miniRight{justify-self:end; text-align:right}
-    .muted{color:var(--muted)}
-    @media (max-width: 720px){
-      .inputRow{grid-template-columns:1fr}
-      .inputRow .btn.small{justify-self:start}
-      .miniGrid{grid-template-columns:1fr}
-      .miniRight{justify-self:start; text-align:left}
-    }
-
-
-    /* toast */
-    #toast .toastInner{
-      display:inline-flex; gap:10px; align-items:center;
-      padding:10px 12px;
-      border-radius:16px;
-      border:1px solid var(--stroke);
-      background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
-      backdrop-filter: blur(16px) saturate(140%);
-      -webkit-backdrop-filter: blur(16px) saturate(140%);
-      box-shadow:0 14px 32px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.12);
-      color:var(--text);
-      font-weight:700;
-    }
-    #toast .toastSub{ font-weight:600; color:var(--muted); font-size:12px; }
-
-
-    /* hide toggle buttons - pills are tappable */
-    #toggleRole,#toggleSync,#toggleSound,#toggleAuto,#toggleLong,#idleToggle{display:none !important}
-    .pill{cursor:pointer}
-
-
-    /* input contrast */
-    #oneLineInput{
-      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04)) !important;
-      color:var(--text) !important;
-      border:1px solid var(--stroke) !important;
-    }
-    [data-theme="light"] #oneLineInput{
-      background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.72)) !important;
-      color:var(--text) !important;
-    }
-
-
-    /* prevent glass hover artifacts */
-    .card{overflow:hidden; isolation:isolate}
-    .statusBox{overflow:hidden}
-
-
-    /* kill backdrop-filter (fix hover artifacts on some GPUs/browsers) */
-    .card,.pill,.statusBox,.btn,.oneLineRow input,.inputRow input,.chip{
-      backdrop-filter:none !important;
-      -webkit-backdrop-filter:none !important;
-    }
-
-
-    /* tea visibility */
-    .teaLabel{font-size:14px;font-weight:800;letter-spacing:.2px}
-    .teaLabel .teaIcon{font-size:18px;line-height:1}
-
-</style>
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <div>
-      <h1>なこといっしょ</h1>
-      <div class="sub">いっしょに生活・作業しよう</div>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">なこといっしょ <span class="sub">（個人版 / v4-fix）</span></div>
+      <div class="chips">
+        <div class="chip"><span class="dot" id="dotSync"></span><b>SYNC</b>: <span id="syncText">OFF</span></div>
+        <div class="chip"><b>ROOM</b>: <span class="mono" id="roomText">—</span></div>
+        <div class="chip"><b>入室</b>: <span class="mono" id="presenceText">0/2</span></div>
+        <div class="chip"><b>ROLE</b>: <span id="roleText">なこ</span></div>
+        <div class="chip"><b>ERR</b>: <span id="errText">—</span></div>
+      </div>
     </div>
-    <div class="row" id="headerRight">
-      <span class="pill">ROOM: <span id="roomId" class="mono"></span>
-    <span class="pill tiny" id="presencePill">入室：<span id="presenceText" class="mono">0/2</span></span></span>
-      <span class="pill" id="rolePill">ROLE: <span id="roleText" class="mono">なこ</span></span>
-      <span class="pill tiny" id="verPill">v4</span>
-      <button class="btn small" id="toggleRole">切替</button>
 
-      <span class="pill" id="syncPill">SYNC: <span id="syncState" class="mono">OFF</span></span>
-      <button class="btn small" id="toggleSync">切替</button>
-
-      <span class="pill">ERR: <span id="errText" class="mono">—</span></span>
-
-      <span class="pill" id="nowPill">🗓 <span id="nowDate" class="mono">—</span> <span class="mono" id="nowTime">—</span> <span id="moonText">—</span></span>
-<button class="btn small" id="themeToggle">☀︎/🌙</button>
-      <button class="btn small" id="copyLink">共有リンクをコピー</button>
-    </div>
-  </div>
-
-  <div class="grid">
-    <div class="card" id="pomoCard">
-      <div class="row" style="justify-content:space-between;">
-        <div>
-          <div class="label">ポモドーロ</div>
-          <div class="big mono" id="clock">25:00</div>
+    <div class="grid">
+      <div class="card">
+        <h2>ポモドーロ</h2>
+        <div class="row space">
+          <div class="big mono" id="timerText">25:00</div>
+          <div class="row">
+            <button class="btn primary" id="btnStart">はじめる</button>
+            <button class="btn" id="btnNext">つぎへ</button>
+            <button class="btn" id="btnReset">リセット</button>
+          </div>
         </div>
+        <div class="sep"></div>
         <div class="row">
-          <button class="btn primary" id="startPauseBtn">はじめる</button>
-          <button class="btn" id="skipBtn">つぎへ</button>
-          <button class="btn warn" id="resetBtn">リセット</button>
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:10px;">
-        <span class="pill" id="soundPill">音 <span id="soundState" class="mono">ON</span></span>
-        <button class="btn small" id="toggleSound">切替</button>
-        <span class="pill" id="autoPill">自動 <span id="autoState" class="mono">ON</span></span>
-        <button class="btn small" id="toggleAuto">切替</button>
-        <span class="pill" id="longPill">長休憩 <span id="longState" class="mono">OFF</span></span>
-        <button class="btn small" id="toggleLong">切替</button>
-      </div>
-
-      <div class="row" style="margin-top:10px;">
-        <span class="label">プリセット</span>
-        <button class="chip" data-preset="25,5">25/5</button>
-        <button class="chip" data-preset="30,5">30/5</button>
-        <button class="chip" data-preset="50,10">50/10</button>
-      </div>
-        <div class="row" style="margin-top:10px; justify-content:space-between; align-items:center;">
-          <div class="label">長休憩（分）</div>
-          <div class="row" style="gap:8px;">
-            <button class="chip" id="lb10">10</button>
-            <button class="chip" id="lb15">15</button>
-            <button class="chip" id="lb20">20</button>
-          </div>
-        </div>
-        <div class="row" style="margin-top:10px; justify-content:space-between; align-items:center;">
-          <div class="label">目標（ポモ）</div>
-          <div class="row" style="gap:8px;">
-            <button class="chip" id="goal4">4</button>
-            <button class="chip" id="goal6">6</button>
-            <button class="chip" id="goal8">8</button>
-          </div>
-        </div>
-        <div class="label" style="margin-top:8px;">進捗：<span id="goalProg" class="mono">—</span></div>
-
-
-
-      <div class="sep"></div>
-
-      <div class="row" style="justify-content:space-between;">
-        <div class="label">今日のポモ合計</div>
-        <div class="mono"><strong id="pomoTotal">0</strong></div>
-      </div>
-      <div class="label" style="margin-top:6px;">最終更新：<span id="pomoUpdated" class="mono">—</span></div>
-      <div class="sep"></div>
-      <div class="label">ガイド</div>
-      <div class="statusBox" style="margin-top:10px;">
-        <div class="row" style="justify-content:space-between;">
-          <div>いま：<strong id="nowModeMini">—</strong></div>
+          <button class="btn small active" data-preset="25/5">25/5</button>
+          <button class="btn small" data-preset="30/5">30/5</button>
+          <button class="btn small" data-preset="50/10">50/10</button>
+          <span class="pill" title="ユーザー操作後に音が有効になります">🔊 <span id="soundText">ON</span></span>
+          <button class="btn small" id="btnSound">音 ON/OFF</button>
         </div>
         <div class="sep"></div>
-        
+        <div class="kv">
+          <div>モード</div><div id="modeText">WORK</div>
+          <div>進捗</div><div><span id="pomoText">0</span> / <span id="pomoGoalText">6</span></div>
+          <div>最終更新</div><div id="lastUpdateText">—</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>同期設定（localStorage）</h2>
+        <div class="sub">
+          SUPABASE_URL は <span class="mono">https://xxxx.supabase.co</span><br />
+          SUPABASE_ANON_KEY は <span class="mono">sb_publishable_...</span>（secretは入れない）
+        </div>
         <div class="sep"></div>
-        
-        <div class="label">次にやる1つ</div>
-        <div class="row" style="margin-top:10px; align-items:flex-start;">
-          <div style="flex:1; min-width:240px;">
-            <input id="oneLineInput" type="text" placeholder="例：下書き3コマ / 背景1枚 / 食器だけ" style="width:100%;" />
-          </div>
-          <div class="row" style="gap:10px; align-items:center;">
-            <button class="btn small" id="oneLineSave">保存</button>
-          </div>
-        </div>
-        <div class="row" style="justify-content:space-between; margin-top:10px;">
-          <div class="label">最終更新：<span id="oneLineAt" class="mono">—</span> <span id="oneLineBy" class="mono" style="opacity:.85;"></span></div>
-          <span class="pill tiny">SYNC <span id="oneLineSyncState" class="mono">OFF</span></span>
-        </div>
-
-
-
-        <div class="row" style="justify-content:space-between; margin-top:8px;">
-          <div>ゲスト：<span id="guestMini">—</span></div>
-        <div class="sep"></div>
-        
-        <div class="label">生活</div>
-        <div class="lifeRow" style="margin-top:10px;">
-          <button class="chip" data-life="おはよう">おはよう</button>
-          <button class="chip" data-life="ただいま">ただいま</button>
-          <button class="chip" data-life="ねむい">ねむい</button>
-          <button class="chip" data-life="おやすみ">おやすみ</button>
-        </div>
-        <div class="label" style="margin-top:10px;">最後：<span id="lifeLast" class="mono">—</span> / <span id="lifeAt" class="mono">—</span></div>
-
-
-          <div>最終：<span id="guestMiniAt" class="mono">—</span></div>
-        </div>
-        <div class="row" style="justify-content:space-between; margin-top:8px;">
-          <div>🍵の番：<strong id="teaTurnMini">—</strong></div>
-          <div>最終：<span id="teaMiniAt" class="mono">—</span></div>
-        </div>
-      </div>
-
-
-      <div style="margin-top:10px" class="bar"><div id="progressBar"></div></div>
-    </div>
-
-    <div class="card">
-      <div class="row" style="justify-content:space-between; align-items:center;">
-  <div class="label">ステータス</div>
-  </div>
-
-      <div class="sep"></div>
-      <div class="sep"></div>
-<div class="label">ゲスト</div>
-      <div class="row" style="margin-top:8px;">
-
-        <button class="chip" data-status="ネーム">ネーム</button>
-        <button class="chip" data-status="作画">作画</button>
-        <button class="chip" data-status="休憩">休憩</button>
-        <button class="chip" data-status="食事">食事</button>
-        <button class="chip" data-status="打ち合わせ">打ち合わせ</button>
-        <button class="chip" data-status="離席">離席</button>
-        <button class="chip" data-status="外出">外出</button>
-        <button class="chip" data-status="寝てる">寝てる</button>
-        <button class="chip" data-status="無理">無理</button>
-      </div>
-      <div class="statusBox" style="margin-top:10px;">
-        <div>いま：<span id="userShow">未設定</span></div>
-        <div class="label">最終更新：<span id="userAt" class="mono">—</span></div>
-      </div>
-
-      <div class="sep"></div>
-      <div class="label">なこ（自分）</div>
-      <div class="row" style="margin-top:8px;">
-
-        <button class="chip" data-naco="仕事">仕事</button>
-        <button class="chip" data-naco="作業">作業</button>
-        <button class="chip" data-naco="休憩">休憩</button>
-        <button class="chip" data-naco="食事">食事</button>
-        <button class="chip" data-naco="外出">外出</button>
-        <button class="chip" data-naco="離席">離席</button>
-        <button class="chip" data-naco="寝てる">寝てる</button>
-        <button class="chip" data-naco="無理">無理</button>
-      </div>
-      <div class="statusBox" style="margin-top:10px;">
-        <div>いま：<span id="nacoShow">未設定</span></div>
-        <div class="label">最終更新：<span id="nacoAt" class="mono">—</span></div>
-      </div>
-
-      <div class="sep"></div>
-      <div class="row" style="justify-content:space-between; align-items:flex-end;">
-        <div>
-          
-        <div class="sep"></div>
-        <div class="label">生活</div>
-        <div class="statusBox" style="margin-top:10px;">
-          <div class="row" style="justify-content:space-between;">
-            <div>最後：<span id="lifeLastR" class="mono">—</span></div>
-            <div><span id="lifeAtR" class="mono">—</span></div>
-          </div>
-        </div>
-<div class="label">🍵 <span class="mono" id="teaTurnText" style="opacity:.85;"></span></div>
-          <div class="label" id="teaDebug" style="display:none;">—</div>
-        </div>
         <div class="row">
-          <button class="btn small primary" id="teaAction">🍵</button>
+          <button class="btn" id="btnRoleNaco">ROLE: なこ</button>
+          <button class="btn" id="btnRoleGuest">ROLE: ゲスト</button>
         </div>
-      </div>
-      <div class="statusBox" style="margin-top:10px;">
-        <div class="row" style="justify-content:space-between;">
-          <div><span class="label">待ち</span> <strong id="teaPending" class="mono">0</strong></div>
-          <div><span class="label">回数</span> <strong id="teaTotal" class="mono">0</strong></div>
+        <div class="sep"></div>
+        <div class="row">
+          <button class="btn primary" id="btnSync">SYNC ON/OFF</button>
+          <button class="btn" id="btnCopyLink">共有リンクをコピー</button>
         </div>
-        <div class="label" style="margin-top:6px;">最終更新：<span id="teaAt" class="mono">—</span></div>
+        <div class="sep"></div>
+        <div class="kv">
+          <div>URL</div><div class="mono" id="urlPreview">—</div>
+          <div>KEY</div><div class="mono" id="keyPreview">—</div>
+        </div>
+        <div class="sep"></div>
+        <div class="sub">※ DevTools → Application → Local storage に入れてください</div>
       </div>
 
-      <div class="sep"></div>
-      <div class="row">
-        <span class="pill" id="idlePill">自動離席 <span id="idleState" class="mono">ON</span></span>
-        <button class="btn small" id="idleToggle">切替</button>
-        <span class="pill">分 <span id="idleMin" class="mono">60</span></span>
-        <button class="btn small" id="idleMinus">-</button>
-        <button class="btn small" id="idlePlus">+</button>
+      <div class="card">
+        <h2>ステータス（同期対象）</h2>
+        <div class="sub">ボタンを押すと Supabase の <span class="mono">naco_rooms</span> に書き込み → 相手に反映</div>
+        <div class="sep"></div>
+
+        <div class="row"><span class="pill">ゲスト側</span></div>
+        <div class="row" id="guestButtons"></div>
+        <div class="sub">いま：<b id="guestNow">—</b></div>
+
+        <div class="sep"></div>
+
+        <div class="row"><span class="pill">なこ側</span></div>
+        <div class="row" id="nacoButtons"></div>
+        <div class="sub">いま：<b id="nacoNow">—</b></div>
+      </div>
+
+      <div class="card">
+        <h2>メモ（ローカル）</h2>
+        <div class="sub">まず status/presence を安定させるため、ここはローカル保存のみ</div>
+        <div class="sep"></div>
+        <input id="memoInput" type="text" placeholder="次にやること（例：下書き3コマ / 背景1枚）" />
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" id="btnMemoSave">保存（ローカル）</button>
+          <span class="sub" id="memoSaved">—</span>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<script>
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-  // safe event binder
-  function on(id, evt, fn){
-    const el = document.getElementById(id);
-    if(!el) return;
-    el.addEventListener(evt, fn);
-  }
-(async () => {
-  // ---------- utilities ----------
-  const key = (k) => "pw_" + room + "_" + k;
-  const timeAgo = (iso) => {
-    try{
-      const t = new Date(iso).getTime();
-      if (!t) return "—";
-      const s = Math.floor((Date.now() - t)/1000);
-      if (s < 5) return "いま";
-      if (s < 60) return s+"秒前";
-      const m = Math.floor(s/60);
-      if (m < 60) return m+"分前";
-      const h = Math.floor(m/60);
-      if (h < 48) return h+"時間前";
-      const d = Math.floor(h/24);
-      return d+"日前";
-    }catch{return "—";}
-  };
+    const LS_URL = "SUPABASE_URL";
+    const LS_KEY = "SUPABASE_ANON_KEY";
+    const LS_ROLE = "pw_role";   // "naco" or "guest"
+    const LS_SYNC = "pw_syncOn"; // "true"/"false"
 
-  // ---------- tiny toast (ぽん) ----------
-  let toastEl = document.getElementById("toast");
-  if (!toastEl) {
-    toastEl = document.createElement("div");
-    toastEl.id = "toast";
-    toastEl.style.position = "fixed";
-    toastEl.style.left = "18px";
-    toastEl.style.bottom = "18px";
-    toastEl.style.zIndex = "9999";
-    toastEl.style.pointerEvents = "none";
-    toastEl.style.opacity = "0";
-    toastEl.style.transform = "translateY(10px)";
-    toastEl.style.transition = "opacity .18s ease, transform .18s ease";
-    toastEl.style.maxWidth = "min(420px, calc(100vw - 36px))";
-    document.body.appendChild(toastEl);
-  }
-  let toastTimer = null;
-  const showToast = (main, sub) => {
-    if (!toastEl) return;
-    toastEl.innerHTML = `<div class="toastInner">🫧 <div><div>${main}</div>${sub?`<div class="toastSub">${sub}</div>`:""}</div></div>`;
-    toastEl.style.opacity = "1";
-    toastEl.style.transform = "translateY(0)";
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      toastEl.style.opacity = "0";
-      toastEl.style.transform = "translateY(10px)";
-    }, 1100);
-  };
+    const TABLE = "naco_rooms";
+    const STATUS_GUEST = ["ネーム","作画","休憩","食事","打ち合わせ","離席","外出","寝てる","無理"];
+    const STATUS_NACO  = ["仕事","作業","休憩","食事","外出","離席","寝てる","無理"];
 
-  // ---------- room ----------
-  const room = (location.hash || "").replace("#","").trim() || Math.random().toString(36).slice(2,10);
-  if (!location.hash) location.hash = "#" + room;
-  document.getElementById("roomId").textContent = room;
-  // ---------- now (date/time/dow + full moon approx) ----------
-  const nowDateEl = document.getElementById("nowDate");
-    const nowTimeEl = document.getElementById("nowTime");
-  const moonTextEl = document.getElementById("moonText");
+    const TTL_MS = 70_000;
 
-  const isFullMoonApprox = (d) => {
-    // Approximate lunar phase using a known new moon epoch (2000-01-06 18:14 UTC) and synodic month length.
-    // This is NOT astronomical precision, but good enough for "満月っぽい？" indicator.
-    const synodic = 29.530588853; // days
-    const epoch = Date.UTC(2000,0,6,18,14,0); // ms
-    const days = (d.getTime() - epoch) / 86400000;
-    const phase = ((days / synodic) % 1 + 1) % 1; // 0=new, 0.5=full
-    const dist = Math.abs(phase - 0.5);
-    return { phase, dist, isFull: dist < 0.03 }; // ~±0.9 day window
-  };
+    const $ = (id) => document.getElementById(id);
 
-  const renderNow = () => {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const da = String(d.getDate()).padStart(2,"0");
-    const hh = String(d.getHours()).padStart(2,"0");
-    const mm = String(d.getMinutes()).padStart(2,"0");
-    // seconds not needed in header
-    const dow = ["日","月","火","水","木","金","土"][d.getDay()];
+    const dotSync = $("dotSync");
+    const syncText = $("syncText");
+    const roomText = $("roomText");
+    const roleText = $("roleText");
+    const presenceText = $("presenceText");
+    const errText = $("errText");
+    const lastUpdateText = $("lastUpdateText");
+    const urlPreview = $("urlPreview");
+    const keyPreview = $("keyPreview");
 
-    if (nowDateEl) nowDateEl.textContent = `${y}-${m}-${da}`;
-        if (nowTimeEl) nowTimeEl.textContent = `${hh}:${mm}`;
+    const timerText = $("timerText");
+    const modeText = $("modeText");
+    const pomoText = $("pomoText");
+    const pomoGoalText = $("pomoGoalText");
+    const soundText = $("soundText");
 
-    const fm = isFullMoonApprox(d);
-    if (moonTextEl) moonTextEl.textContent = fm.isFull ? "🌕 満月っぽい" : "🌗";
-  };
+    const guestButtons = $("guestButtons");
+    const nacoButtons = $("nacoButtons");
+    const guestNow = $("guestNow");
+    const nacoNow = $("nacoNow");
 
-  renderNow();
-  setInterval(renderNow, 10_000);
+    let sb = null;
+    let supabaseReady = false;
+    let syncOn = false;
 
+    let role = (localStorage.getItem(LS_ROLE) || "naco");
+    let roomId = null;
 
-  // ---------- storage (safe) ----------
-  const mem = new Map();
-  let storeOk = true;
-  try{
-    localStorage.setItem("__pw_t","1"); localStorage.removeItem("__pw_t");
-  }catch{ storeOk = false; }
+    let pollTimer = null;
+    let hbTimer = null;
 
-  const load = (k, fallback) => {
-    const kk = key(k);
-    try{
-      if (storeOk) {
-        const v = localStorage.getItem(kk);
-        return v === null ? fallback : JSON.parse(v);
-      }
-      const mv = mem.has(kk) ? mem.get(kk) : null;
-      return mv === null ? fallback : JSON.parse(mv);
-    }catch{
-      storeOk = false;
-      try{
-        const mv = mem.has(kk) ? mem.get(kk) : null;
-        return mv === null ? fallback : JSON.parse(mv);
-      }catch{return fallback;}
+    function setErr(msg){ errText.textContent = msg || "—"; }
+    function setSyncUI(on){
+      syncOn = !!on;
+      syncText.textContent = syncOn ? "ON" : "OFF";
+      dotSync.className = "dot " + (syncOn ? "ok" : "");
+      localStorage.setItem(LS_SYNC, String(syncOn));
     }
-  };
-  const save = (k, v) => {
-    const kk = key(k);
-    const s = JSON.stringify(v);
-    mem.set(kk, s);
-    if (!storeOk) return;
-    try{ localStorage.setItem(kk, s); }
-    catch{ storeOk = false; }
-  };
+    function setRoleUI(r){
+      role = r;
+      roleText.textContent = (role === "naco") ? "なこ" : "ゲスト";
+      localStorage.setItem(LS_ROLE, role);
+      $("btnRoleNaco").classList.toggle("active", role === "naco");
+      $("btnRoleGuest").classList.toggle("active", role === "guest");
+    }
+    function getHashRoomId(){
+      const h = (location.hash || "").replace(/^#/, "").trim();
+      return h || null;
+    }
+    function nowIso(){ return new Date().toISOString(); }
+    function isValidSupabaseUrl(url){
+      return typeof url === "string" && /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url);
+    }
+    function maskKey(k){
+      if (!k) return "—";
+      if (k.length <= 14) return k;
+      return k.slice(0, 14) + "…" + k.slice(-6);
+    }
 
-  // ---------- role ----------
-  const roleText = document.getElementById("roleText");
-  let role = load("role","host"); // host | guest
-  const renderRole = () => roleText.textContent = (role === "host" ? "なこ" : "ゲスト");
-  renderRole();
+    async function initSupabase(){
+      const u = (localStorage.getItem(LS_URL) || "").trim();
+      const k = (localStorage.getItem(LS_KEY) || "").trim();
+      urlPreview.textContent = u || "—";
+      keyPreview.textContent = maskKey(k);
 
-  
-  // ---------- presence (入室 x/2) using Supabase-synced timestamps ----------
-  const presenceTextEl = document.getElementById("presenceText");
-  const PRESENCE_WINDOW_MS = 90 * 1000;
+      if (!u || !k){ supabaseReady=false; setErr("Supabase未設定（URL/KEY空）"); return false; }
+      if (!isValidSupabaseUrl(u)){ supabaseReady=false; setErr("Supabase URL形式が不正"); return false; }
 
-  const ts = (iso) => {
-    if (!iso) return 0;
-    const t = new Date(iso).getTime();
-    return Number.isFinite(t) ? t : 0;
-  };
+      sb = createClient(u, k, { auth:{ persistSession:false, autoRefreshToken:false } });
 
-  const renderPresence = () => {
-    const now = Date.now();
-    const hostAt = ts(load("naco_status_at", null));   // なこ側の心拍
-    const guestAt = ts(load("user_status_at", null)); // ゲスト側の心拍
-    const hostOn = hostAt && (now - hostAt) < PRESENCE_WINDOW_MS;
-    const guestOn = guestAt && (now - guestAt) < PRESENCE_WINDOW_MS;
-    const on = (hostOn ? 1 : 0) + (guestOn ? 1 : 0);
-    if (presenceTextEl) presenceTextEl.textContent = `${on}/2`;
-  };
+      // ★必ず1本HTTPを出す（Networkに supabase.co が出る）
+      const { error } = await sb.from(TABLE).select("room_id").limit(1);
+      if (error){
+        console.warn("[PING] error", error);
+        setErr(`PING失敗: ${error.status || error.code || "?"}`);
+        supabaseReady=false;
+        return false;
+      }
 
-  const themeBtn = document.getElementById("themeToggle");
-let theme = load("theme","dark");
-const applyTheme = ()=>document.documentElement.setAttribute("data-theme", theme);
-applyTheme();
-
-  const APP_VERSION = "v4";
-  const vp = document.getElementById("verPill"); if(vp) vp.textContent = APP_VERSION;
-
-themeBtn && themeBtn.addEventListener("click", ()=>{ theme = (theme==="dark")?"light":"dark"; save("theme", theme); applyTheme(); });
-
-on("toggleRole","click", () => {
-    role = (role === "host") ? "guest" : "host";
-    save("role", role);
-    renderRole();
-  });
-
-  // pill taps (1ボタンで切替)
-  const rolePill = document.getElementById("rolePill");
-  const syncPill = document.getElementById("syncPill");
-  const soundPill = document.getElementById("soundPill");
-  const autoPill = document.getElementById("autoPill");
-  const longPill = document.getElementById("longPill");
-  const idlePill = document.getElementById("idlePill");
-
-  rolePill && rolePill.addEventListener("click", () => document.getElementById("toggleRole")?.click());
-  syncPill && syncPill.addEventListener("click", () => document.getElementById("toggleSync")?.click());
-  soundPill && soundPill.addEventListener("click", () => document.getElementById("toggleSound")?.click());
-  autoPill && autoPill.addEventListener("click", () => document.getElementById("toggleAuto")?.click());
-  longPill && longPill.addEventListener("click", () => document.getElementById("toggleLong")?.click());
-  idlePill && idlePill.addEventListener("click", () => document.getElementById("idleToggle")?.click());
-
-  // ---------- sync (optional) ----------
-  // Netlify(https)で使う前提。ここにSupabaseのURLとPublishable keyを貼る（またはlocalStorageに入れてもOK）。
-  const SUPABASE_URL = load("SUPABASE_URL", "");      // 例: https://xxxx.supabase.co
-  const SUPABASE_ANON_KEY = load("SUPABASE_ANON_KEY", ""); // 例: sb_publishable_...
-
-  let sb = null;
-  let supabaseReady = false;
-  let syncOn = load("syncOn", false);
-  const syncStateEl = document.getElementById("syncState");
-  const errTextEl = document.getElementById("errText");
-  let lastErr = "—";
-  const setErr = (t) => { lastErr = (t && t.trim()) ? t : "—"; try{ renderErr(); }catch{} };
-
-
-  const renderErr = () => {
-    if (!errTextEl) return;
-    if (lastErr === "Supabase未設定") { errTextEl.textContent = "—"; return; }
-    errTextEl.textContent = lastErr || "—";
-  };
-  renderErr();
-  const setSyncUi = () => { syncStateEl.textContent = (!syncOn) ? "OFF" : (supabaseReady ? "ON" : "ON*"); };
-  setSyncUi();
-
-  const tryInitSupabase = async () => {
-    if (!syncOn) { supabaseReady = false; sb = null; return; }
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) { setErr("Supabase未設定"); supabaseReady = false; return; }
-    try{
-      const mod = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
-      sb = mod.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
-      supabaseReady = true;
+      supabaseReady=true;
       setErr("—");
-      setSyncUi();
-    }catch(e){
-      supabaseReady = false;
-      setErr("SYNCロード失敗");
-      setSyncUi();
+      return true;
     }
-  };
 
-  on("toggleSync","click", async () => {
-    syncOn = !syncOn;
-    save("syncOn", syncOn);
-    setSyncUi();
-    await tryInitSupabase();
-  if (syncOn && supabaseReady) { try{ await pullStatusesRemote(); startStatusRealtime(); }catch(e){} }
-    try{ renderOneLine(); }catch{}
-    try{ renderLife(); }catch{}
-    try{ renderStatuses(); }catch{}
-    try{ renderTea(); }catch{}
-    if (!supabaseReady) return;
-
-    // Tea
-    try{ await ensureTeaRow(); await fetchTeaRemote(); startTeaRealtime(); }catch(e){ console.error(e); }
-
-    // One line
-    try{ await fetchOneLineRemote(); startOneLineRealtime(); }catch(e){ console.error(e); }
-
-    // Life
-    try{ await fetchLifeRemote(); startLifeRealtime(); }catch(e){ console.error(e); }
-
-    // Statuses
-    try{ await pullStatusesRemote(); startStatusRealtime(); }catch(e){ console.error(e); }
-  });
-
-// ---------- state ----------
-  const userShow = document.getElementById("userShow");
-  const userAt = document.getElementById("userAt");
-  const nacoShow = document.getElementById("nacoShow");
-  const nacoAt = document.getElementById("nacoAt");
-
-  const renderStatuses = () => {
-    const us = load("user_status","未設定");
-    const ua = load("user_status_at", null);
-    const ns = load("naco_status","未設定");
-    const na = load("naco_status_at", null);
-    userShow.textContent = us;
-    userAt.textContent = ua ? timeAgo(ua) : "—";
-    nacoShow.textContent = ns;
-    nacoAt.textContent = na ? timeAgo(na) : "—";
-  };
-  // keep presence in sync with latest timestamps
-  renderPresence();
-  renderStatuses();
-
-
-  // ---------- mini guide (A + C) ----------
-  const nowModeMiniEl = document.getElementById("nowModeMini");  const guestMiniEl = document.getElementById("guestMini");
-  const guestMiniAtEl = document.getElementById("guestMiniAt");
-  const teaTurnMiniEl = document.getElementById("teaTurnMini");
-  const teaMiniAtEl = document.getElementById("teaMiniAt");
-  const oneLineInputEl = document.getElementById("oneLineInput");
-  const oneLineSaveBtn = document.getElementById("oneLineSave");
-  const oneLineAtEl = document.getElementById("oneLineAt");
-  const oneLineByEl = document.getElementById("oneLineBy");
-  const oneLineSyncStateEl = document.getElementById("oneLineSyncState");
-
-
-  const updateMini = () => {
-    // mode/next are updated by pomodoro render, so only set if available
-    try {
-      const guestStatus = load("user_status","—");
-      const guestAt = load("user_status_at", null);
-      if (guestMiniEl) guestMiniEl.textContent = guestStatus;
-      if (guestMiniAtEl) guestMiniAtEl.textContent = guestAt ? timeAgo(guestAt) : "—";
-    } catch {}
-
-    try {
-      const turn = (teaState === "TO_GUEST") ? "GUEST" : (teaState === "TO_HOST" ? "HOST" : "—");
-      if (teaTurnMiniEl) teaTurnMiniEl.textContent = turn;
-      if (teaMiniAtEl) teaMiniAtEl.textContent = teaAtIso ? timeAgo(teaAtIso) : "—";
-    } catch {}
-  };
-  updateMini();
-
-  // ---------- one-line memo (local + optional sync) ----------
-  let oneLineText = load("oneLine_text", "") || "";
-  let oneLineAtIso = load("oneLine_at", null);
-  let oneLineBy = load("oneLine_by", "");
-
-  const renderOneLine = () => {
-    if (oneLineInputEl && oneLineInputEl.value !== oneLineText) oneLineInputEl.value = oneLineText;
-    if (oneLineAtEl) oneLineAtEl.textContent = oneLineAtIso ? timeAgo(oneLineAtIso) : "—";
-    if (oneLineByEl) oneLineByEl.textContent = oneLineBy ? `(${oneLineBy})` : "";
-    if (oneLineSyncStateEl) oneLineSyncStateEl.textContent = !syncOn ? "OFF" : (supabaseReady ? "ON" : "ON*");
-  };
-  renderOneLine();
-
-  // ---------- life taps (local) ----------
-  const lifeLastEl = document.getElementById("lifeLast");
-  const lifeLastREl = document.getElementById("lifeLastR");
-  const lifeAtEl = document.getElementById("lifeAt");
-  const lifeAtREl = document.getElementById("lifeAtR");
-  let lifeLast = load("life_last", "") || "";
-  let lifeAtIso = load("life_at", null);
-
-  const renderLife = () => {
-    if (lifeLastEl) lifeLastEl.textContent = lifeLast || "—";
-    if (lifeLastREl) lifeLastREl.textContent = lifeLast || "—";
-    if (lifeAtEl) lifeAtEl.textContent = lifeAtIso ? timeAgo(lifeAtIso) : "—";
-    if (lifeAtREl) lifeAtREl.textContent = lifeAtIso ? timeAgo(lifeAtIso) : "—";
-  };
-  renderLife();
-
-  const setLife = async (txt) => {
-    lifeLast = txt;
-    lifeAtIso = new Date().toISOString();
-    save("life_last", lifeLast);
-    save("life_at", lifeAtIso);
-    renderLife();
-    showToast(`ぽん`, txt);
-    if (syncOn && supabaseReady) { try { await pushLifeRemote(); } catch(e){ console.error(e); } }
-  };
-
-  const pushLifeRemote = async () => {
-    if (!supabaseReady) return;
-    const payload = {
-      life_last: lifeLast,
-      life_updated_at: new Date().toISOString(),
-      life_last_actor: (role === "host" ? "なこ" : "ゲスト")
-    };
-    const { error } = await sb.from("naco_rooms").update(payload).eq("room_id", room);
-    if (error) throw error;
-  };
-
-  const fetchLifeRemote = async () => {
-    if (!supabaseReady) return;
-    const { data, error } = await sb.from("naco_rooms")
-      .select("life_last,life_updated_at,life_last_actor")
-      .eq("room_id", room).single();
-    if (error) throw error;
-    if (data){
-      lifeLast = data.life_last || "";
-      lifeAtIso = data.life_updated_at || null;
-      save("life_last", lifeLast);
-      save("life_at", lifeAtIso);
-      renderLife();
-    }
-  };
-
-  let lifeChannel = null;
-  const startLifeRealtime = () => {
-    if (!supabaseReady) return;
-    try{
-      if (lifeChannel) sb.removeChannel(lifeChannel);
-      lifeChannel = sb.channel("life_"+room)
-        .on("postgres_changes",
-          { event:"UPDATE", schema:"public", table:"naco_rooms", filter:`room_id=eq.${room}` },
-          (payload) => {
-            const r = payload.new || {};
-            if (typeof r.life_last === "string"){
-              lifeLast = r.life_last || "";
-              lifeAtIso = r.life_updated_at || null;
-              save("life_last", lifeLast);
-              save("life_at", lifeAtIso);
-              renderLife();
-            }
-          })
-        .subscribe();
-    }catch(e){}
-  };
-
-  document.querySelectorAll("[data-life]").forEach(btn => {
-    btn.addEventListener("click", () => { setLife(btn.getAttribute("data-life") || ""); });
-  });
-
-  const setOneLineLocal = (text, atIso, by) => {
-    oneLineText = (text || "").slice(0, 80);
-    oneLineAtIso = atIso || new Date().toISOString();
-    oneLineBy = by || (role === "host" ? "HOST" : "GUEST");
-    save("oneLine_text", oneLineText);
-    save("oneLine_at", oneLineAtIso);
-    save("oneLine_by", oneLineBy);
-    renderOneLine();
-  };
-
-  const ensureOneLineCols = async () => {
-    // No-op: columns must exist. If not, updates will error and we fall back to local.
-  };
-
-  const fetchOneLineRemote = async () => {
-    if (!supabaseReady) return;
-    const { data, error } = await sb.from("naco_rooms")
-      .select("one_line_text,one_line_updated_at,one_line_last_actor")
-      .eq("room_id", room).single();
-    if (error) throw error;
-    if (data) setOneLineLocal(data.one_line_text || "", data.one_line_updated_at || null, data.one_line_last_actor || "");
-  };
-
-  const pushOneLineRemote = async (text) => {
-    if (!supabaseReady) return;
-    const payload = {
-      one_line_text: (text || "").slice(0,80),
-      one_line_updated_at: new Date().toISOString(),
-      one_line_last_actor: (role === "host" ? "HOST" : "GUEST")
-    };
-    const { error } = await sb.from("naco_rooms").update(payload).eq("room_id", room);
-    if (error) throw error;
-  };
-
-  let oneLineChannel = null;
-  const startOneLineRealtime = () => {
-    if (!supabaseReady) return;
-    try{
-      if (oneLineChannel) sb.removeChannel(oneLineChannel);
-      oneLineChannel = sb.channel("oneLine_"+room)
-        .on("postgres_changes",
-          { event:"UPDATE", schema:"public", table:"naco_rooms", filter:`room_id=eq.${room}` },
-          (payload) => {
-            const r = payload.new || {};
-            if (typeof r.one_line_text === "string") {
-              setOneLineLocal(r.one_line_text, r.one_line_updated_at || null, r.one_line_last_actor || "");
-            }
-          })
-        .subscribe();
-    }catch(e){}
-  };
-
-  const saveOneLine = async () => {
-    const text = oneLineInputEl ? oneLineInputEl.value : "";
-    setOneLineLocal(text, new Date().toISOString(), (role==="host"?"HOST":"GUEST"));
-    if (syncOn && supabaseReady) {
-      try { await pushOneLineRemote(text); } catch(e){ console.error(e); }
-    }
-  };
-
-  oneLineSaveBtn && oneLineSaveBtn.addEventListener("click", saveOneLine);
-  oneLineInputEl && oneLineInputEl.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); saveOneLine(); }
-  });
-
-  const setUserLocal = (txt) => {
-    save("user_status", txt);
-    save("user_status_at", new Date().toISOString());
-    renderStatuses();
-  };
-  const setNacoLocal = (txt) => {
-    save("naco_status", txt);
-    save("naco_status_at", new Date().toISOString());
-    renderStatuses();
-  };
-
-  
-  const pullStatusesRemote = async () => {
-    if (!supabaseReady) return;
-    const { data, error } = await sb.from("naco_rooms")
-      .select("room_id,user_status,user_status_updated_at,naco_status,naco_status_updated_at,updated_at")
-      .eq("room_id", room)
-      .maybeSingle();
-    if (error) throw error;
-    if (!data) return;
-    if (typeof data.user_status === "string" && data.user_status_updated_at){
-      const localAt = load("user_status_at", null);
-      if (!localAt || new Date(data.user_status_updated_at).getTime() > new Date(localAt).getTime()){
-        save("user_status", data.user_status || "");
-        save("user_status_at", data.user_status_updated_at);
-      }
-    }
-    if (typeof data.naco_status === "string" && data.naco_status_updated_at){
-      const localAt = load("naco_status_at", null);
-      if (!localAt || new Date(data.naco_status_updated_at).getTime() > new Date(localAt).getTime()){
-        save("naco_status", data.naco_status || "");
-        save("naco_status_at", data.naco_status_updated_at);
-      }
-    }
-    renderStatuses();
-  };
-
-  const pushStatusesRemote = async () => {
-    if (!supabaseReady) return;
-    const payload = {
-      room_id: room,
-      user_status: load("user_status","") || "",
-      user_status_updated_at: load("user_status_at", null) || new Date().toISOString(),
-      naco_status: load("naco_status","") || "",
-      naco_status_updated_at: load("naco_status_at", null) || new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    const { error } = await sb.from("naco_rooms").upsert(payload, { onConflict:"room_id" });
-    if (error) throw error;
-  };
-
-  
-  // ---------- role heartbeat (keeps 入室 2/2 even when idle/tab throttled) ----------
-  const pingRoleRemote = async () => {
-    if (!supabaseReady) return;
-    const nowIso = new Date().toISOString();
-    // Use status_updated_at columns as "last_active" heartbeats.
-    // IMPORTANT: update only your own columns to avoid overwriting the other person's state.
-    const isHost = (role === "host");
-    const patch = isHost
-      ? { room_id: room, naco_status: load("naco_status","") || "", naco_status_updated_at: nowIso, updated_at: nowIso }
-      : { room_id: room, user_status: load("user_status","") || "", user_status_updated_at: nowIso, updated_at: nowIso };
-    try{
-      const { error } = await sb.from("naco_rooms").upsert(patch, { onConflict:"room_id" });
+    async function ensureRoomRow(){
+      const payload = { room_id: roomId, updated_at: nowIso() };
+      const { error } = await sb.from(TABLE).upsert(payload, { onConflict:"room_id" });
       if (error) throw error;
-      // mirror heartbeat locally so presence updates immediately
-      if (isHost) save("naco_status_at", nowIso); else save("user_status_at", nowIso);
-      renderPresence();
-    }catch(e){
-      // keep UI calm; ERR pill will show
-      throw e;
-    }
-  };
-
-  const schedulePing = () => {
-    // ping immediately, then every 25s; also ping when tab becomes visible
-    pingRoleRemote().catch(()=>{});
-  };
-  setInterval(()=>{ pingRoleRemote().catch(()=>{}); }, 25*1000);
-  document.addEventListener("visibilitychange", ()=>{ if (!document.hidden) schedulePing(); });
-  window.addEventListener("focus", schedulePing);
-
-
-  let statusChannel = null;
-  const startStatusRealtime = () => {
-    if (!supabaseReady) return;
-    try{
-      if (statusChannel) sb.removeChannel(statusChannel);
-      statusChannel = sb.channel("status_"+room)
-        .on("postgres_changes",
-          { event:"UPDATE", schema:"public", table:"naco_rooms", filter:`room_id=eq.${room}` },
-          (payload) => {
-            const r = payload.new || {};
-
-            if (typeof r.user_status === "string"){
-              save("user_status", r.user_status || "");
-              save("user_status_at", r.user_status_updated_at || new Date().toISOString());
-            }
-            if (typeof r.naco_status === "string"){
-              save("naco_status", r.naco_status || "");
-              save("naco_status_at", r.naco_status_updated_at || new Date().toISOString());
-            }
-            renderStatuses();
-          })
-        .subscribe();
-    }catch(e){}
-  };
-
-document.querySelectorAll("[data-status]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const txt = btn.getAttribute("data-status") || "";
-      setUserLocal(txt);
-      if (syncOn && supabaseReady) { try{ await pushStatusesRemote(); }catch(e){ setErr("SYNC書込失敗"); } }
-    });
-  });
-  document.querySelectorAll("[data-naco]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const txt = btn.getAttribute("data-naco") || "";
-      setNacoLocal(txt);
-      if (syncOn && supabaseReady) { try{ await pushStatusesRemote(); }catch(e){ setErr("SYNC書込失敗"); } }
-    });
-  });
-
-  // ---------- tea (ターン制・同期) ----------
-  const teaTurnText = document.getElementById("teaTurnText");
-  const teaActionBtn = document.getElementById("teaAction");
-  const teaPendingEl = document.getElementById("teaPending");
-  const teaTotalEl = document.getElementById("teaTotal");
-  const teaAtEl = document.getElementById("teaAt");
-
-  // tea_state: "IDLE" | "TO_GUEST" | "TO_HOST"
-  let teaState = load("tea_state", "IDLE");
-  let teaTurnCount = load("tea_turn_count", 0) || 0;
-  let teaAtIso = load("tea_at", null);
-
-  const persistTea = () => {
-    save("tea_state", teaState);
-    save("tea_turn_count", teaTurnCount);
-    save("tea_at", teaAtIso);
-  };
-
-  const whoTurn = () => {
-    if (teaState === "TO_GUEST") return "GUEST";
-    if (teaState === "TO_HOST") return "HOST";
-    return "—";
-  };
-
-  const renderTea = () => {
-    const pending = (teaState === "IDLE") ? 0 : 1;
-    teaPendingEl.textContent = String(pending);
-    teaTotalEl.textContent = String(teaTurnCount);
-    teaAtEl.textContent = teaAtIso ? timeAgo(teaAtIso) : "—";
-    if (teaTurnText) teaTurnText.textContent = `(${whoTurn()}の番)`;
-
-    // 1ボタン: 状態とROLEでラベル/有効を決める
-    const isHost = (role === "host");
-    let label = "🍵";
-    let enabled = false;
-
-    if (teaState === "IDLE") {
-      // 開始はHOSTのみ
-      label = isHost ? "🍵いれる（渡す）" : "🍵待ち";
-      enabled = isHost;
-    } else if (teaState === "TO_GUEST") {
-      label = isHost ? "🍵待ち" : "🍵のむ（返す）";
-      enabled = !isHost;
-    } else if (teaState === "TO_HOST") {
-      label = isHost ? "🍵のむ（返す）" : "🍵待ち";
-      enabled = isHost;
     }
 
-    if (teaActionBtn) {
-      teaActionBtn.textContent = label;
-      teaActionBtn.disabled = !enabled;
-      teaActionBtn.style.opacity = enabled ? "1" : ".55";
-    }
-  };
-
-  const setTeaLocal = (state, count, at) => {
-    teaState = state;
-    teaTurnCount = count;
-    teaAtIso = at || null;
-    persistTea();
-    renderTea();
-    try { updateMini(); } catch {}
-  };
-
-  renderTea();
-
-  // Supabase sync (table: public.naco_rooms)
-  const ensureTeaRow = async () => {
-    if (!supabaseReady) return;
-    const payload = { room_id: room, tea_state: "IDLE", tea_turn_count: 0, tea_updated_at: new Date().toISOString() };
-    const { error } = await sb.from("naco_rooms").upsert(payload, { onConflict: "room_id" });
-    if (error) throw error;
-  };
-
-  const fetchTeaRemote = async () => {
-    if (!supabaseReady) return;
-    const { data, error } = await sb.from("naco_rooms")
-      .select("tea_state,tea_turn_count,tea_updated_at")
-      .eq("room_id", room).single();
-    if (error) throw error;
-    setTeaLocal(data.tea_state || "IDLE", data.tea_turn_count || 0, data.tea_updated_at || null);
-  };
-
-  const pushTeaRemote = async (state, count) => {
-    if (!supabaseReady) return;
-    const payload = { tea_state: state, tea_turn_count: count, tea_updated_at: new Date().toISOString() };
-    const { error } = await sb.from("naco_rooms").update(payload).eq("room_id", room);
-    if (error) throw error;
-  };
-
-  let teaChannel = null;
-  const startTeaRealtime = () => {
-    if (!supabaseReady) return;
-    try{
-      if (teaChannel) sb.removeChannel(teaChannel);
-      teaChannel = sb.channel("tea_"+room)
-        .on("postgres_changes",
-          { event:"UPDATE", schema:"public", table:"naco_rooms", filter:`room_id=eq.${room}` },
-          (payload) => {
-            const r = payload.new || {};
-            if (r.tea_state) setTeaLocal(r.tea_state, r.tea_turn_count || 0, r.tea_updated_at || null);
-          })
-        .subscribe();
-    }catch(e){}
-  };
-
-  // 1ボタン挙動
-  teaActionBtn && teaActionBtn.addEventListener("click", async () => {
-    const isHost = (role === "host");
-    let nextState = teaState;
-    let nextCount = teaTurnCount;
-
-    if (teaState === "IDLE") {
-      if (!isHost) return;
-      nextState = "TO_GUEST";
-      nextCount = teaTurnCount + 1; // 送った回数（往復数の代替）
-    } else if (teaState === "TO_GUEST") {
-      if (isHost) return;
-      nextState = "TO_HOST";
-      nextCount = teaTurnCount + 1;
-    } else if (teaState === "TO_HOST") {
-      if (!isHost) return;
-      nextState = "TO_GUEST";
-      nextCount = teaTurnCount + 1;
+    function statusCols(){
+      if (role === "naco") return { statusCol:"naco_status", timeCol:"naco_status_updated_at" };
+      return { statusCol:"user_status", timeCol:"user_status_updated_at" };
     }
 
-    setTeaLocal(nextState, nextCount, new Date().toISOString());
-    if (supabaseReady) { try { await pushTeaRemote(nextState, nextCount); } catch(e){ console.error(e); } }
-  });
-
-  // auto start sync if ON
-  if (syncOn) {
-    try{ renderOneLine(); }catch{}
-    await tryInitSupabase();
-    if (supabaseReady) { await ensureTeaRow(); await fetchTeaRemote(); startTeaRealtime();
-      try { await fetchOneLineRemote(); startOneLineRealtime(); } catch(e){ console.error(e); }
-      try { await fetchLifeRemote(); startLifeRealtime(); } catch(e){ console.error(e); }
-    }
-  }
-
-  // ---------- pomodoro ----------
-  let workMin = load("workMin", 25);
-  let breakMin = load("breakMin", 5);
-  let autoLongBreak = load("autoLongBreak", true);
-  let longBreakMin = load("longBreakMin", 15);
-  let workCount = load("workCount", 0) || 0;
-  let goalTarget = load("goalTarget", 4) || 4;
-  let autoNext = load("autoNext", true);
-  let soundOn = load("soundOn", true);
-
-  const clockEl = document.getElementById("clock");
-  const barEl = document.getElementById("progressBar");
-  const soundState = document.getElementById("soundState");
-  const autoState = document.getElementById("autoState");
-  const longState = document.getElementById("longState");
-  const pomoTotalEl = document.getElementById("pomoTotal");
-  const pomoUpdatedEl = document.getElementById("pomoUpdated");
-
-  const setSoundUi = ()=> soundState.textContent = soundOn ? "ON":"OFF";
-  const setAutoUi = ()=> autoState.textContent = autoNext ? "ON":"OFF";
-  const setLongUi = ()=> longState.textContent = autoLongBreak ? "ON":"OFF";
-  setSoundUi(); setAutoUi(); setLongUi();
-
-  let mode = load("mode","WORK"); // WORK/BREAK
-  let remaining = load("remaining", workMin*60);
-  let running = false;
-  let timer = null;
-
-  let nacoPomo = load("naco_pomo", 0) || 0;
-  let userPomo = load("user_pomo", 0) || 0;
-  let pomoAtIso = load("pomo_at", null);
-
-  const renderPomo = () => {
-    const m = String(Math.floor(remaining/60)).padStart(2,"0");
-    const s = String(remaining%60).padStart(2,"0");
-    clockEl.textContent = `${m}:${s}`;
-    const total = (mode==="WORK" ? workMin*60 : breakMin*60);
-    const pct = total ? (100*(1-remaining/total)) : 0;
-    barEl.style.width = `${Math.max(0,Math.min(100,pct))}%`;
-    const sum = nacoPomo + userPomo;
-    pomoTotalEl.textContent = String(sum);
-    pomoUpdatedEl.textContent = pomoAtIso ? timeAgo(pomoAtIso) : "—";
-    try {
-      if (nowModeMiniEl) nowModeMiniEl.textContent = (mode === "WORK") ? "作業" : "休憩";    } catch {}
-
-  };
-  renderPomo();
-  try{ renderStartPause(); }catch{}
-
-  const audio = {
-    ctx: null,
-    unlocked: false,
-    ensure() {
-      if (this.ctx) return this.ctx;
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      if (!Ctx) return null;
-      this.ctx = new Ctx();
-      return this.ctx;
-    },
-    unlock() {
-      const ctx = this.ensure();
-      if (!ctx) return;
-      // resume is required on some browsers until a user gesture happens
-      ctx.resume && ctx.resume().catch(()=>{});
-      this.unlocked = true;
-    },
-    beep(freq=880, dur=0.28, vol=0.16){
-      if (!soundOn) return;
-      const ctx = this.ensure();
-      if (!ctx) return;
-      // If still suspended, try resume (may fail without gesture)
-      if (ctx.state === "suspended") { ctx.resume().catch(()=>{}); }
-      const t0 = ctx.currentTime;
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = "sine";
-      o.frequency.setValueAtTime(freq, t0);
-      g.gain.setValueAtTime(0.0001, t0);
-      o.connect(g); g.connect(ctx.destination);
-      o.start(t0);
-      g.gain.exponentialRampToValueAtTime(Math.max(0.001, vol), t0 + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-      o.stop(t0 + dur + 0.03);
-    }
-  };
-
-  // Unlock audio on first user interaction (required for many browsers)
-  window.addEventListener("pointerdown", ()=> audio.unlock(), { once:true });
-  window.addEventListener("keydown", ()=> audio.unlock(), { once:true });
-
-  const beep = () => audio.beep(880, 0.32, 0.14);
-
-
-  const nextBreakSeconds = () => {
-    if (!autoLongBreak) return breakMin*60;
-    // every 4th work completion => long break
-    const nextCount = workCount + 1;
-    return (nextCount % 4 === 0) ? (longBreakMin*60) : (breakMin*60);
-  };
-
-  const switchMode = () => {
-    if (mode === "WORK") {
-      mode = "BREAK";
-      remaining = nextBreakSeconds();
-    } else {
-      mode = "WORK";
-      remaining = workMin*60;
-    }
-    save("mode", mode);
-    save("remaining", remaining);
-  };
-
-  const tick = () => {
-    if (!running) return;
-    remaining = Math.max(0, remaining-1);
-    save("remaining", remaining);
-    renderPomo();
-    if (remaining === 0){
-      beep();
-      if (mode === "WORK"){
-        // completed one work session
-        workCount += 1;
-        save("workCount", workCount);
-        try{ renderGoalPick(); }catch{}
-        if (workCount === goalTarget) { try{ showToast("今日の目標達成", `ポモ ${goalTarget}`); }catch{} }
-        if (role === "host") nacoPomo += 1; else userPomo += 1;
-        pomoAtIso = new Date().toISOString();
-        save("naco_pomo", nacoPomo);
-        save("user_pomo", userPomo);
-        save("pomo_at", pomoAtIso);
-      }
-      if (autoNext) {
-        switchMode();
-        renderPomo();
-      } else {
-        stop();
+    async function writeStatus(val){
+      if (!syncOn || !supabaseReady) return;
+      const { statusCol, timeCol } = statusCols();
+      const patch = { [statusCol]: val, [timeCol]: nowIso(), updated_at: nowIso() };
+      const { error } = await sb.from(TABLE).update(patch).eq("room_id", roomId);
+      if (error){
+        console.warn("[writeStatus] error", error);
+        setErr(`更新失敗: ${error.status || error.code || "?"}`);
       }
     }
-  };
 
-  const start = () => {
-    if (running) return;
-    running = true;
-    timer = setInterval(tick, 1000);
-    try{ renderStartPause(); }catch{}
-  };
-  const stop = () => {
-    running = false;
-    if (timer) clearInterval(timer);
-    timer = null;
-    try{ renderStartPause(); }catch{}
-  };
-  const reset = () => {
-    stop();
-    mode = "WORK";
-    remaining = workMin*60;
-    save("mode", mode);
-    save("remaining", remaining);
-    renderPomo();
-  };
+    async function heartbeat(){
+      if (!syncOn || !supabaseReady) return;
+      const { statusCol, timeCol } = statusCols();
+      const current = (role === "naco") ? nacoNow.textContent : guestNow.textContent;
+      const patch = {
+        [statusCol]: (current && current !== "—") ? current : null,
+        [timeCol]: nowIso(),
+        updated_at: nowIso()
+      };
+      const { error } = await sb.from(TABLE).update(patch).eq("room_id", roomId);
+      if (error) console.warn("[heartbeat] error", error);
+    }
 
-  
-  
-  on("resetBtn","click", () => reset());
+    function calcPresence(row){
+      const now = Date.now();
+      const nacoAlive  = row?.naco_status_updated_at && (now - Date.parse(row.naco_status_updated_at) < TTL_MS);
+      const guestAlive = row?.user_status_updated_at && (now - Date.parse(row.user_status_updated_at) < TTL_MS);
+      const count = (nacoAlive?1:0) + (guestAlive?1:0);
+      return `${count}/2`;
+    }
 
-  const startPauseBtn = document.getElementById("startPauseBtn");
-  const skipBtn = document.getElementById("skipBtn");
+    async function poll(){
+      if (!syncOn || !supabaseReady) return;
+      const { data, error } = await sb
+        .from(TABLE)
+        .select("room_id,updated_at,naco_status,naco_status_updated_at,user_status,user_status_updated_at")
+        .eq("room_id", roomId)
+        .maybeSingle();
 
-  const lb10 = document.getElementById("lb10");
-  const lb15 = document.getElementById("lb15");
-  const lb20 = document.getElementById("lb20");
-  const renderLongBreakPick = () => {
-    [lb10,lb15,lb20].forEach(b=>{ if(!b) return; b.style.opacity = "0.65"; });
-    const map = {10:lb10,15:lb15,20:lb20};
-    const b = map[longBreakMin];
-    if (b){ b.style.opacity="1"; }
-  };
-  const setLongBreakMin = (v) => { longBreakMin = v; save("longBreakMin", v); renderLongBreakPick(); };
+      if (error){
+        console.warn("[poll] error", error);
+        setErr(`取得失敗: ${error.status || error.code || "?"}`);
+        return;
+      }
+      if (!data) return;
 
-  const goal4 = document.getElementById("goal4");
-  const goal6 = document.getElementById("goal6");
-  const goal8 = document.getElementById("goal8");
-  const goalProgEl = document.getElementById("goalProg");
+      nacoNow.textContent = data.naco_status || "—";
+      guestNow.textContent = data.user_status || "—";
+      lastUpdateText.textContent = data.updated_at ? new Date(data.updated_at).toLocaleString() : "—";
+      presenceText.textContent = calcPresence(data);
+    }
 
-  const renderGoalPick = () => {
-    [goal4,goal6,goal8].forEach(b=>{ if(!b) return; b.style.opacity="0.65"; });
-    const map = {4:goal4,6:goal6,8:goal8};
-    const b = map[goalTarget];
-    if (b) b.style.opacity="1";
-    const done = Math.min(workCount, goalTarget);
-    const dots = "▮".repeat(done) + "▯".repeat(Math.max(0, goalTarget-done));
-    if (goalProgEl) goalProgEl.textContent = `${dots}  ${done}/${goalTarget}`;
-  };
-  const setGoal = (v) => { goalTarget = v; save("goalTarget", v); renderGoalPick(); };
-  goal4 && goal4.addEventListener("click", ()=>setGoal(4));
-  goal6 && goal6.addEventListener("click", ()=>setGoal(6));
-  goal8 && goal8.addEventListener("click", ()=>setGoal(8));
-  renderGoalPick();
-  lb10 && lb10.addEventListener("click", ()=>setLongBreakMin(10));
-  lb15 && lb15.addEventListener("click", ()=>setLongBreakMin(15));
-  lb20 && lb20.addEventListener("click", ()=>setLongBreakMin(20));
-  renderLongBreakPick();
+    function startPolling(){ stopPolling(); poll(); pollTimer = setInterval(poll, 2500); }
+    function stopPolling(){ if (pollTimer) clearInterval(pollTimer); pollTimer=null; }
+    function startHeartbeat(){ stopHeartbeat(); heartbeat(); hbTimer = setInterval(heartbeat, 25000); }
+    function stopHeartbeat(){ if (hbTimer) clearInterval(hbTimer); hbTimer=null; }
 
-  const renderStartPause = () => {
-    if (!startPauseBtn) return;
-    startPauseBtn.textContent = running ? "いったん止める" : "はじめる";
-  };
+    async function startSync(){
+      roomId = getHashRoomId();
+      roomText.textContent = roomId || "—";
+      if (!roomId){ setErr("roomIdが無い"); setSyncUI(false); return; }
 
-  startPauseBtn && startPauseBtn.addEventListener("click", () => {
-    if (running) stop(); else start();
-    renderStartPause();
-  });
+      const ok = await initSupabase();
+      if (!ok){ setSyncUI(false); return; }
 
-  skipBtn && skipBtn.addEventListener("click", () => {
-    // 今の区切りを終わらせて次へ
-    stop();
-    switchMode();
-    save("mode", mode);
-    save("remaining", remaining);
-    renderPomo();
-    renderStartPause();
-  });
+      try{ await ensureRoomRow(); }
+      catch(e){
+        console.error("[ensureRoomRow] failed", e);
+        setErr("room作成失敗");
+        setSyncUI(false);
+        return;
+      }
 
-  // Space: start/pause (when not typing)
-  window.addEventListener("keydown", (e) => {
-    if (e.code !== "Space") return;
-    const tag = (document.activeElement && document.activeElement.tagName) ? document.activeElement.tagName.toLowerCase() : "";
-    if (tag === "input" || tag === "textarea") return;
-    e.preventDefault();
-    startPauseBtn && startPauseBtn.click();
-  });
+      startHeartbeat();
+      startPolling();
+    }
 
-  // Enter: next (when not typing)
-  window.addEventListener("keydown", (e) => {
-    if (e.key !== "Enter") return;
-    const tag = (document.activeElement && document.activeElement.tagName) ? document.activeElement.tagName.toLowerCase() : "";
-    if (tag === "input" || tag === "textarea") return;
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
-    e.preventDefault();
-    skipBtn && skipBtn.click();
-  });
+    function stopSync(){ stopPolling(); stopHeartbeat(); }
 
-  // keep label fresh when timer starts/stops automatically
+    async function toggleSync(){
+      const next = !syncOn;
+      setSyncUI(next);
+      if (next) await startSync();
+      else stopSync();
+    }
 
-  on("toggleSound","click", () => {
-    soundOn = !soundOn; save("soundOn", soundOn); setSoundUi();
-  });
-  on("toggleAuto","click", () => {
-    autoNext = !autoNext; save("autoNext", autoNext); setAutoUi();
-  });
-  on("toggleLong","click", () => {
-    autoLongBreak = !autoLongBreak; save("autoLongBreak", autoLongBreak); setLongUi();
-  });
+    function buildStatusButtons(container, items, onClick){
+      container.innerHTML = "";
+      for (const label of items){
+        const b = document.createElement("button");
+        b.className = "btn small";
+        b.textContent = label;
+        b.addEventListener("click", () => onClick(label));
+        container.appendChild(b);
+      }
+    }
 
-  document.querySelectorAll("[data-preset]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const [w,b] = (btn.getAttribute("data-preset")||"25,5").split(",").map(x=>parseInt(x,10));
-      workMin = w; breakMin = b;
-      save("workMin", workMin); save("breakMin", breakMin);
-      reset();
+    // Pomodoro
+    let soundOn = true;
+    let audioUnlocked = false;
+    let tickTimer = null;
+    let remainingSec = 25 * 60;
+    let presetWork = 25 * 60;
+    let presetBreak = 5 * 60;
+    let mode = "WORK";
+    let pomo = 0;
+    const pomoGoal = 6;
+
+    function setTimerText(){
+      const m = String(Math.floor(remainingSec / 60)).padStart(2, "0");
+      const s = String(remainingSec % 60).padStart(2, "0");
+      timerText.textContent = `${m}:${s}`;
+      modeText.textContent = mode;
+      pomoText.textContent = String(pomo);
+      pomoGoalText.textContent = String(pomoGoal);
+      soundText.textContent = soundOn ? "ON" : "OFF";
+    }
+    function beep(){
+      if (!soundOn || !audioUnlocked) return;
+      try{
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = "sine"; o.frequency.value = 880; g.gain.value = 0.06;
+        o.connect(g); g.connect(ctx.destination);
+        o.start();
+        setTimeout(() => { o.stop(); ctx.close(); }, 180);
+      }catch{}
+    }
+    async function unlockAudioOnce(){
+      if (audioUnlocked) return;
+      audioUnlocked = true;
+      try{
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        await ctx.resume(); await ctx.close();
+      }catch{}
+    }
+    function stopTick(){ if (tickTimer) clearInterval(tickTimer); tickTimer=null; $("btnStart").textContent="はじめる"; }
+    function startTick(){
+      if (tickTimer) return;
+      $("btnStart").textContent="とめる";
+      tickTimer = setInterval(() => {
+        remainingSec = Math.max(0, remainingSec - 1);
+        setTimerText();
+        if (remainingSec === 0){ stopTick(); beep(); nextPhase(); }
+      }, 1000);
+    }
+    function nextPhase(){
+      if (mode === "WORK"){ mode="BREAK"; remainingSec = presetBreak; pomo += 1; }
+      else { mode="WORK"; remainingSec = presetWork; }
+      setTimerText();
+    }
+    function resetTimer(){ stopTick(); mode="WORK"; pomo=0; remainingSec=presetWork; setTimerText(); }
+    function setPreset(str){
+      const [w,b] = str.split("/").map(x=>parseInt(x,10));
+      presetWork = w*60; presetBreak = b*60; resetTimer();
+    }
+
+    function copyShareLink(){
+      const base = location.origin + location.pathname;
+      const rid = getHashRoomId() || "roomidをハッシュに入れてね";
+      const url = `${base}#${rid}`;
+      navigator.clipboard?.writeText(url).catch(()=>{});
+    }
+
+    function boot(){
+      roomId = getHashRoomId();
+      roomText.textContent = roomId || "—";
+
+      setRoleUI(role);
+
+      const savedSync = (localStorage.getItem(LS_SYNC) === "true");
+      setSyncUI(savedSync);
+
+      buildStatusButtons(guestButtons, STATUS_GUEST, async (label) => {
+        await unlockAudioOnce();
+        if (role !== "guest"){ setErr("ゲスト役に切替えて押して"); return; }
+        await writeStatus(label);
+      });
+      buildStatusButtons(nacoButtons, STATUS_NACO, async (label) => {
+        await unlockAudioOnce();
+        if (role !== "naco"){ setErr("なこ役に切替えて押して"); return; }
+        await writeStatus(label);
+      });
+
+      setTimerText();
+
+      $("btnSync").addEventListener("click", async () => { await unlockAudioOnce(); await toggleSync(); });
+      $("btnCopyLink").addEventListener("click", async () => { await unlockAudioOnce(); copyShareLink(); });
+
+      $("btnRoleNaco").addEventListener("click", async () => { await unlockAudioOnce(); setRoleUI("naco"); });
+      $("btnRoleGuest").addEventListener("click", async () => { await unlockAudioOnce(); setRoleUI("guest"); });
+
+      $("btnStart").addEventListener("click", async () => { await unlockAudioOnce(); tickTimer ? stopTick() : startTick(); });
+      $("btnNext").addEventListener("click", async () => { await unlockAudioOnce(); nextPhase(); });
+      $("btnReset").addEventListener("click", async () => { await unlockAudioOnce(); resetTimer(); });
+      $("btnSound").addEventListener("click", async () => { await unlockAudioOnce(); soundOn = !soundOn; setTimerText(); });
+
+      for (const b of document.querySelectorAll("[data-preset]")){
+        b.addEventListener("click", async () => {
+          await unlockAudioOnce();
+          document.querySelectorAll("[data-preset]").forEach(x=>x.classList.remove("active"));
+          b.classList.add("active");
+          setPreset(b.getAttribute("data-preset"));
+        });
+      }
+
+      const memoKey = "pw_memo_" + (roomId || "no_room");
+      $("btnMemoSave").addEventListener("click", () => {
+        const v = $("memoInput").value || "";
+        localStorage.setItem(memoKey, v);
+        $("memoSaved").textContent = "保存した";
+        setTimeout(()=> $("memoSaved").textContent="—", 1200);
+      });
+      $("memoInput").value = localStorage.getItem(memoKey) || "";
+
+      if (savedSync) startSync().catch(()=>{});
+    }
+
+    window.addEventListener("hashchange", () => {
+      stopSync(); setSyncUI(false); boot();
     });
-  });
 
-  // ---------- idle ----------
-  let idleOn = load("idleOn", true);
-  let idleMinutes = load("idleMinutes", 60);
-  let lastActivityAt = Date.now();
-  const idleStateEl = document.getElementById("idleState");
-  const idleMinEl = document.getElementById("idleMin");
-  const renderIdle = () => {
-    idleStateEl.textContent = idleOn ? "ON":"OFF";
-    idleMinEl.textContent = String(idleMinutes);
-  };
-  renderIdle();
-  const mark = () => { lastActivityAt = Date.now(); };
-  ["pointerdown","pointermove","keydown","scroll","touchstart"].forEach(evt=>window.addEventListener(evt, mark, {passive:true}));
-
-  on("idleToggle","click", ()=>{
-    idleOn = !idleOn; save("idleOn", idleOn); renderIdle();
-  });
-  on("idleMinus","click", ()=>{
-    idleMinutes = Math.max(5, idleMinutes-5); save("idleMinutes", idleMinutes); renderIdle();
-  });
-  on("idlePlus","click", ()=>{
-    idleMinutes = Math.min(240, idleMinutes+5); save("idleMinutes", idleMinutes); renderIdle();
-  });
-
-  setInterval(()=> {
-    if (!idleOn) return;
-    const ms = idleMinutes*60*1000;
-    if (Date.now() - lastActivityAt < ms) return;
-    // auto set sleep for self role status
-    setNacoLocal("寝てる");
-  }, 5000);
-
-  // ---------- header actions ----------
-  on("refreshNow","click", ()=>{
-    renderStatuses(); renderTea(); renderPomo(); renderIdle(); try{ updateMini(); }catch{} try{ renderOneLine(); }catch{} try{ renderLife(); }catch{}
-
-  on("copyLink","click", async () => {
-    const url = location.origin + location.pathname + "#" + room;
-    try{
-      await navigator.clipboard.writeText(url);
-      showToast("共有リンクをコピーしたよ");
-      return;
-    }catch(e){}
-    try{
-      const tmp = document.createElement("input");
-      tmp.value = url;
-      tmp.style.position = "fixed";
-      tmp.style.left = "-9999px";
-      tmp.style.top = "0";
-      document.body.appendChild(tmp);
-      tmp.focus(); tmp.select();
-      const ok = document.execCommand("copy");
-      document.body.removeChild(tmp);
-      if (ok){ showToast("共有リンクをコピーしたよ"); return; }
-    }catch(e){}
-    window.prompt("共有リンク（手動でコピーしてね）", url);
-  });
-
-  });
-  // init sync if already on (mostly for https)
-  (async()=>{ if (syncOn) await tryInitSupabase(); })();
-})();
-</script>
-
-<div id="toast" style="position:fixed;left:18px;bottom:18px;z-index:9999;pointer-events:none;opacity:0;transform:translateY(10px);transition:opacity .18s ease, transform .18s ease;max-width:min(420px, calc(100vw - 36px));"></div>
+    document.addEventListener("DOMContentLoaded", boot);
+    document.addEventListener("pointerdown", unlockAudioOnce, { once:true });
+  </script>
 </body>
 </html>
