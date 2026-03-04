@@ -202,6 +202,7 @@
       <span class="pill">ROOM: <span id="roomId" class="mono"></span>
     <span class="pill tiny" id="presencePill">入室：<span id="presenceText" class="mono">0/2</span></span></span>
       <span class="pill" id="rolePill">ROLE: <span id="roleText" class="mono">なこ</span></span>
+      <span class="pill tiny" id="verPill">v4</span>
       <button class="btn small" id="toggleRole">切替</button>
 
       <span class="pill" id="syncPill">SYNC: <span id="syncState" class="mono">OFF</span></span>
@@ -566,6 +567,10 @@
 let theme = load("theme","dark");
 const applyTheme = ()=>document.documentElement.setAttribute("data-theme", theme);
 applyTheme();
+
+  const APP_VERSION = "v4";
+  const vp = document.getElementById("verPill"); if(vp) vp.textContent = APP_VERSION;
+
 themeBtn && themeBtn.addEventListener("click", ()=>{ theme = (theme==="dark")?"light":"dark"; save("theme", theme); applyTheme(); });
 
 on("toggleRole","click", () => {
@@ -953,11 +958,6 @@ on("toggleRole","click", () => {
           (payload) => {
             const r = payload.new || {};
 
-  // Poll fallback (works even if Realtime disabled)
-  setInterval(async () => {
-    if (!syncOn || !supabaseReady) return;
-    try { await pullStatusesRemote(); } catch(e) {}
-  }, 3000);
             if (typeof r.user_status === "string"){
               save("user_status", r.user_status || "");
               save("user_status_at", r.user_status_updated_at || new Date().toISOString());
