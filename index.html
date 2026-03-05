@@ -189,6 +189,71 @@
     .teaLabel{font-size:14px;font-weight:800;letter-spacing:.2px}
     .teaLabel .teaIcon{font-size:18px;line-height:1}
 
+
+/* ===== Compact mode (v1) ===== */
+:root{
+  --wrap-max: 920px;
+  --pad: 12px;
+  --radius: 16px;
+  --chip-pad-y: 6px;
+  --chip-pad-x: 10px;
+  --btn-pad-y: 8px;
+  --btn-pad-x: 11px;
+  --fs-13: 12.5px;
+  --fs-14: 13px;
+  --fs-16: 14.5px;
+  --fs-big: clamp(38px, 5vw, 50px);
+  --gap: 10px;
+}
+
+.wrap{ max-width: var(--wrap-max); padding: 14px; }
+.topbar, .top{ gap: 8px; margin-bottom: 10px; }
+.chips{ gap: 6px; }
+.chip{
+  padding: var(--chip-pad-y) var(--chip-pad-x);
+  font-size: var(--fs-13);
+}
+.card{ padding: var(--pad); border-radius: var(--radius); }
+.card h2{ font-size: var(--fs-14); margin-bottom: 8px; }
+.row{ gap: 6px; }
+.sep{ margin: 10px 0; }
+
+.btn{
+  padding: var(--btn-pad-y) var(--btn-pad-x);
+  font-size: var(--fs-14);
+}
+.btn.small{ padding: 6px 9px; font-size: 12px; }
+.pill{ font-size: 12px; padding: 5px 9px; }
+
+.big, .timer, .time, #timerText{
+  font-size: var(--fs-big) !important;
+}
+
+/* Inputs */
+input[type="text"], input[type="password"]{
+  padding: 9px 11px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+/* 2-column behavior: keep two columns on >= 860px, otherwise stack */
+.grid{ gap: var(--gap); }
+@media (min-width: 860px){
+  .grid{ grid-template-columns: 1.05fr .95fr; }
+}
+@media (max-width: 420px){
+  .chip{ font-size: 12px; }
+  .btn{ font-size: 12.5px; }
+}
+
+/* Reduce large empty space inside status boxes if present */
+.statusBox, .box, .panel, .card .inner{
+  padding: 10px;
+}
+
+/* Keep top chips from becoming too tall */
+.chip b{ font-weight: 800; }
+
 </style>
 </head>
 <body>
