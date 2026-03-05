@@ -69,12 +69,42 @@ html = """<!doctype html>
       padding:6px 10px; border:1px solid var(--line); border-radius:999px; font-size:12px;
       color:var(--muted); background:#0b102655; display:inline-flex; gap:6px; align-items:center;
     }
+    .tiny{ font-size:12px; color:var(--muted); }
+    .list{
+      margin:8px 0 0;
+      padding:0;
+      list-style:none;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .list li a{
+      display:inline-block;
+      padding:7px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#0b102655;
+      color:var(--text);
+      text-decoration:none;
+      font-size:12px;
+    }
+    .list li a:hover{ background:var(--btn2); }
+    label.chk{
+      display:flex; gap:8px; align-items:center;
+      user-select:none;
+      font-size:12px;
+      color:var(--muted);
+      margin-top:8px;
+    }
+    input[type="checkbox"]{
+      width:16px; height:16px;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="topbar">
-      <div class="brand">なこといっしょ <span class="sub">（個人版 / v4-fix+cfg+autosync）</span></div>
+      <div class="brand">なこといっしょ <span class="sub">（個人版 / v5-base）</span></div>
       <div class="chips">
         <div class="chip"><span class="dot" id="dotSync"></span><b>SYNC</b>: <span id="syncText">OFF</span></div>
         <div class="chip"><b>ROOM</b>: <span class="mono" id="roomText">—</span></div>
@@ -115,19 +145,31 @@ html = """<!doctype html>
         <h2>同期設定（保存 → 自動でSYNC ON）</h2>
         <div class="sub">
           <b>SUPABASE_URL</b> は <span class="mono">https://xxxx.supabase.co</span>（末尾 / OK）<br />
-          <b>SUPABASE_ANON_KEY</b> は <span class="mono">sb_publishable_...</span>（secretは絶対入れない）
+          <b>KEY</b> は <span class="mono">sb_publishable_...</span>（secretは絶対入れない）
         </div>
+
         <div class="sep"></div>
 
         <div class="row">
           <button class="btn" id="btnRoleNaco">ROLE: なこ</button>
           <button class="btn" id="btnRoleGuest">ROLE: ゲスト</button>
+          <button class="btn" id="btnNewRoom">新規ルーム作成</button>
+          <button class="btn" id="btnCopyLink">共有リンクをコピー</button>
+        </div>
+
+        <div class="tiny" style="margin-top:8px;">
+          最近のルーム：
+          <ul class="list" id="recentRooms"></ul>
         </div>
 
         <div class="sep"></div>
 
         <input id="cfgUrl" type="text" placeholder="SUPABASE_URL（https://xxxx.supabase.co）" />
-        <input id="cfgKey" type="text" placeholder="SUPABASE_ANON_KEY（sb_publishable_...）" style="margin-top:8px;" />
+        <input id="cfgKey" type="text" placeholder="KEY（sb_publishable_...）" style="margin-top:8px;" />
+        <label class="chk">
+          <input id="cfgRememberKey" type="checkbox" />
+          この端末にKEYを保存（共有PCではOFF推奨）
+        </label>
         <div class="row" style="margin-top:10px;">
           <button class="btn primary" id="btnCfgSave">接続情報を保存（→SYNC ON）</button>
           <button class="btn danger" id="btnCfgClear">消す</button>
@@ -138,7 +180,6 @@ html = """<!doctype html>
 
         <div class="row">
           <button class="btn" id="btnSync">SYNC ON/OFF</button>
-          <button class="btn" id="btnCopyLink">共有リンクをコピー</button>
         </div>
 
         <div class="sep"></div>
@@ -146,6 +187,10 @@ html = """<!doctype html>
         <div class="kv">
           <div>URL</div><div class="mono" id="urlPreview">—</div>
           <div>KEY</div><div class="mono" id="keyPreview">—</div>
+        </div>
+
+        <div class="tiny" style="margin-top:8px;">
+          ※ SYNCがONにならない時は、ERRの文言を見てください（401/403/404など）。
         </div>
       </div>
 
@@ -181,19 +226,25 @@ html = """<!doctype html>
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
+    // ---- storage keys
     const LS_URL = "SUPABASE_URL";
-    const LS_KEY = "SUPABASE_ANON_KEY";
+    const LS_KEY = "SUPABASE_KEY"; // (legacy) local key
+    const SS_KEY = "SUPABASE_KEY_SESSION"; // default session key
+    const LS_REMEMBER = "SUPABASE_REMEMBER_KEY"; // "true"/"false"
+
     const LS_ROLE = "pw_role";
     const LS_SYNC = "pw_syncOn";
+    const LS_ROOMS = "pw_recent_rooms"; // JSON array
 
+    // ---- app constants
     const TABLE = "naco_rooms";
     const STATUS_GUEST = ["ネーム","作画","休憩","食事","打ち合わせ","離席","外出","寝てる","無理"];
     const STATUS_NACO  = ["仕事","作業","休憩","食事","外出","離席","寝てる","無理"];
-
     const TTL_MS = 70_000;
 
     const $ = (id) => document.getElementById(id);
 
+    // ---- DOM
     const dotSync = $("dotSync");
     const syncText = $("syncText");
     const roomText = $("roomText");
@@ -203,6 +254,7 @@ html = """<!doctype html>
     const lastUpdateText = $("lastUpdateText");
     const urlPreview = $("urlPreview");
     const keyPreview = $("keyPreview");
+    const recentRooms = $("recentRooms");
 
     const timerText = $("timerText");
     const modeText = $("modeText");
@@ -217,8 +269,10 @@ html = """<!doctype html>
 
     const cfgUrl = $("cfgUrl");
     const cfgKey = $("cfgKey");
+    const cfgRememberKey = $("cfgRememberKey");
     const cfgSaved = $("cfgSaved");
 
+    // ---- state
     let sb = null;
     let supabaseReady = false;
     let syncOn = false;
@@ -229,7 +283,15 @@ html = """<!doctype html>
     let pollTimer = null;
     let hbTimer = null;
 
+    // presence mode: "last_seen" if DB supports, else "status_time"
+    let presenceMode = "unknown";
+
+    // ---- helpers
     function setErr(msg){ errText.textContent = msg || "—"; }
+    function flashCfg(text){
+      cfgSaved.textContent = text;
+      setTimeout(()=> cfgSaved.textContent="—", 1400);
+    }
     function setSyncUI(on){
       syncOn = !!on;
       syncText.textContent = syncOn ? "ON" : "OFF";
@@ -248,38 +310,139 @@ html = """<!doctype html>
       return h || null;
     }
     function nowIso(){ return new Date().toISOString(); }
+
+    // ✅ 末尾 / を許容、前後空白も許容
     function isValidSupabaseUrl(url){
       const re = new RegExp("^https://[a-z0-9-]+\\.supabase\\.co/?$");
       return typeof url === "string" && re.test(url.trim());
     }
+
     function maskKey(k){
       if (!k) return "—";
       if (k.length <= 14) return k;
       return k.slice(0, 14) + "…" + k.slice(-6);
     }
-    function flashCfg(text){
-      cfgSaved.textContent = text;
-      setTimeout(()=> cfgSaved.textContent="—", 1200);
+
+    function readRememberFlag(){
+      return (localStorage.getItem(LS_REMEMBER) === "true");
     }
 
+    function readKey(){
+      // prefer session key
+      const sk = (sessionStorage.getItem(SS_KEY) || "").trim();
+      if (sk) return sk;
+      // fallback to local key (only if remembered)
+      const lk = (localStorage.getItem(LS_KEY) || "").trim();
+      return lk;
+    }
+
+    function writeKey(key, remember){
+      const k = (key || "").trim();
+      sessionStorage.setItem(SS_KEY, k);
+      if (remember){
+        localStorage.setItem(LS_KEY, k);
+      }else{
+        localStorage.removeItem(LS_KEY);
+      }
+      localStorage.setItem(LS_REMEMBER, String(remember));
+    }
+
+    function clearKey(){
+      sessionStorage.removeItem(SS_KEY);
+      localStorage.removeItem(LS_KEY);
+      localStorage.removeItem(LS_REMEMBER);
+    }
+
+    function setErrFromStatus(status, fallback){
+      if (!status){
+        setErr(fallback || "通信失敗（ネットワーク/ブロック）");
+        return;
+      }
+      if (status === 401){
+        setErr("401: KEYが無効/違う（publishable/anonの取り違え含む）");
+      }else if (status === 403){
+        setErr("403: 権限(RLS)で拒否。テーブル許可/ポリシー要確認");
+      }else if (status === 404){
+        setErr("404: テーブル/スキーマが違う（naco_roomsの存在確認）");
+      }else{
+        setErr(`${status}: Supabase応答エラー`);
+      }
+    }
+
+    function baseUrlForShare(){
+      return location.origin + location.pathname;
+    }
+
+    function buildShareUrl(rid){
+      return `${baseUrlForShare()}#${rid}`;
+    }
+
+    function copyText(text){
+      return navigator.clipboard?.writeText(text).catch(()=>{});
+    }
+
+    function pushRecentRoom(rid){
+      if (!rid) return;
+      let arr = [];
+      try{
+        arr = JSON.parse(localStorage.getItem(LS_ROOMS) || "[]");
+        if (!Array.isArray(arr)) arr = [];
+      }catch{ arr = []; }
+      arr = [rid, ...arr.filter(x => x !== rid)].slice(0, 8);
+      localStorage.setItem(LS_ROOMS, JSON.stringify(arr));
+      renderRecentRooms(arr);
+    }
+
+    function renderRecentRooms(arr){
+      recentRooms.innerHTML = "";
+      (arr || []).forEach(rid => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = buildShareUrl(rid);
+        a.textContent = rid;
+        a.addEventListener("click", () => {
+          // allow navigation
+        });
+        li.appendChild(a);
+        recentRooms.appendChild(li);
+      });
+      if (!arr || arr.length === 0){
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = "#";
+        a.textContent = "なし";
+        a.addEventListener("click", (e)=>e.preventDefault());
+        li.appendChild(a);
+        recentRooms.appendChild(li);
+      }
+    }
+
+    function newRoomId(){
+      // crypto.randomUUID() が無い環境向けフォールバック
+      if (crypto?.randomUUID) return crypto.randomUUID().slice(0, 8);
+      return Math.random().toString(36).slice(2, 10);
+    }
+
+    // ---- supabase init / sync
     async function initSupabase(){
       const u = (localStorage.getItem(LS_URL) || "").trim();
-      const k = (localStorage.getItem(LS_KEY) || "").trim();
+      const k = readKey();
+
       urlPreview.textContent = u || "—";
       keyPreview.textContent = maskKey(k);
 
-      if (!u || !k){ supabaseReady=false; setErr("Supabase未設定（URL/KEY空）"); return false; }
-      if (!isValidSupabaseUrl(u)){ supabaseReady=false; setErr("SupabaseURL形式が不正"); return false; }
+      if (!u || !k){ supabaseReady=false; setErr("未設定: URLまたはKEYが空"); return false; }
+      if (!isValidSupabaseUrl(u)){ supabaseReady=false; setErr("SupabaseURL形式が不正（末尾 / はOK）"); return false; }
 
       if (sb && supabaseReady) return true;
 
-      sb = createClient(u, k, { auth:{ persistSession:false, autoRefreshToken:false } });
+      sb = createClient(u.replace(/\\/+$/,""), k, { auth:{ persistSession:false, autoRefreshToken:false } });
 
       const { error } = await sb.from(TABLE).select("room_id").limit(1);
       if (error){
         console.warn("[PING] error", error);
-        setErr(`PING失敗: ${error.status || error.code || "?"}`);
         supabaseReady=false;
+        setErrFromStatus(error.status, "PING失敗");
         return false;
       }
 
@@ -306,25 +469,55 @@ html = """<!doctype html>
       const { error } = await sb.from(TABLE).update(patch).eq("room_id", roomId);
       if (error){
         console.warn("[writeStatus] error", error);
-        setErr(`更新失敗: ${error.status || error.code || "?"}`);
+        setErrFromStatus(error.status, "更新失敗");
       }
     }
 
     async function heartbeat(){
       if (!syncOn || !supabaseReady) return;
+
+      // try last_seen columns first
+      const iso = nowIso();
+      const isHost = (role === "naco");
+      const lastSeenCol = isHost ? "host_last_seen" : "guest_last_seen";
+
+      // attempt write last_seen (if columns exist)
+      if (presenceMode !== "status_time"){
+        const patch = { [lastSeenCol]: iso, updated_at: iso };
+        const { error } = await sb.from(TABLE).update(patch).eq("room_id", roomId);
+        if (!error){
+          presenceMode = "last_seen";
+          return;
+        }
+        // if schema doesn't have columns, fall back
+        console.warn("[heartbeat last_seen] fallback", error);
+        presenceMode = "status_time";
+      }
+
+      // fallback: update status_updated_at
       const { statusCol, timeCol } = statusCols();
       const current = (role === "naco") ? nacoNow.textContent : guestNow.textContent;
       const patch = {
         [statusCol]: (current && current !== "—") ? current : null,
-        [timeCol]: nowIso(),
-        updated_at: nowIso()
+        [timeCol]: iso,
+        updated_at: iso
       };
       const { error } = await sb.from(TABLE).update(patch).eq("room_id", roomId);
-      if (error) console.warn("[heartbeat] error", error);
+      if (error) console.warn("[heartbeat status_time] error", error);
     }
 
     function calcPresence(row){
       const now = Date.now();
+
+      // prefer last_seen if present
+      if (row && (row.host_last_seen || row.guest_last_seen)){
+        const hostAlive = row.host_last_seen && (now - Date.parse(row.host_last_seen) < TTL_MS);
+        const guestAlive = row.guest_last_seen && (now - Date.parse(row.guest_last_seen) < TTL_MS);
+        const count = (hostAlive?1:0) + (guestAlive?1:0);
+        return `${count}/2`;
+      }
+
+      // fallback to status_updated_at
       const nacoAlive  = row?.naco_status_updated_at && (now - Date.parse(row.naco_status_updated_at) < TTL_MS);
       const guestAlive = row?.user_status_updated_at && (now - Date.parse(row.user_status_updated_at) < TTL_MS);
       const count = (nacoAlive?1:0) + (guestAlive?1:0);
@@ -333,15 +526,21 @@ html = """<!doctype html>
 
     async function poll(){
       if (!syncOn || !supabaseReady) return;
-      const { data, error } = await sb
-        .from(TABLE)
-        .select("room_id,updated_at,naco_status,naco_status_updated_at,user_status,user_status_updated_at")
-        .eq("room_id", roomId)
-        .maybeSingle();
+
+      // try selecting last_seen columns; if schema doesn't support, retry without
+      const baseCols = "room_id,updated_at,naco_status,naco_status_updated_at,user_status,user_status_updated_at";
+      let sel = baseCols + ",host_last_seen,guest_last_seen";
+      let data, error;
+
+      ({ data, error } = await sb.from(TABLE).select(sel).eq("room_id", roomId).maybeSingle());
+      if (error){
+        // retry without last_seen
+        ({ data, error } = await sb.from(TABLE).select(baseCols).eq("room_id", roomId).maybeSingle());
+      }
 
       if (error){
         console.warn("[poll] error", error);
-        setErr(`取得失敗: ${error.status || error.code || "?"}`);
+        setErrFromStatus(error.status, "取得失敗");
         return;
       }
       if (!data) return;
@@ -360,7 +559,9 @@ html = """<!doctype html>
     async function startSync(){
       roomId = getHashRoomId();
       roomText.textContent = roomId || "—";
-      if (!roomId){ setErr("roomIdが無い"); setSyncUI(false); return; }
+      if (!roomId){ setErr("roomIdが無い（URLに #roomId を付けて）"); setSyncUI(false); return; }
+
+      pushRecentRoom(roomId);
 
       const ok = await initSupabase();
       if (!ok){ setSyncUI(false); return; }
@@ -368,7 +569,7 @@ html = """<!doctype html>
       try{ await ensureRoomRow(); }
       catch(e){
         console.error("[ensureRoomRow] failed", e);
-        setErr("room作成失敗");
+        setErrFromStatus(e?.status, "room作成失敗");
         setSyncUI(false);
         return;
       }
@@ -386,6 +587,7 @@ html = """<!doctype html>
       else stopSync();
     }
 
+    // ---- UI build
     function buildStatusButtons(container, items, onClick){
       container.innerHTML = "";
       for (const label of items){
@@ -397,7 +599,7 @@ html = """<!doctype html>
       }
     }
 
-    // Pomodoro
+    // ---- Pomodoro (same as before)
     let soundOn = true;
     let audioUnlocked = false;
     let tickTimer = null;
@@ -458,21 +660,41 @@ html = """<!doctype html>
       presetWork = w*60; presetBreak = b*60; resetTimer();
     }
 
+    // ---- actions
     function copyShareLink(){
-      const base = location.origin + location.pathname;
-      const rid = getHashRoomId() || "roomidをハッシュに入れてね";
-      const url = `${base}#${rid}`;
-      navigator.clipboard?.writeText(url).catch(()=>{});
+      const rid = getHashRoomId();
+      if (!rid){ setErr("roomIdが無い"); return; }
+      copyText(buildShareUrl(rid));
+      flashCfg("リンクをコピーした");
     }
 
+    function createNewRoom(){
+      const rid = newRoomId();
+      location.hash = rid;
+      // hashchange will boot
+      copyText(buildShareUrl(rid));
+      flashCfg("新規ルーム作成→リンクコピー");
+    }
+
+    // ---- boot
     function boot(){
       roomId = getHashRoomId();
       roomText.textContent = roomId || "—";
 
       setRoleUI(role);
 
+      // recent rooms
+      let arr = [];
+      try{
+        arr = JSON.parse(localStorage.getItem(LS_ROOMS) || "[]");
+        if (!Array.isArray(arr)) arr = [];
+      }catch{ arr = []; }
+      renderRecentRooms(arr);
+
+      // config fields preload
       cfgUrl.value = (localStorage.getItem(LS_URL) || "").trim();
-      cfgKey.value = (localStorage.getItem(LS_KEY) || "").trim();
+      cfgRememberKey.checked = readRememberFlag();
+      cfgKey.value = readKey(); // session > local
 
       const savedSync = (localStorage.getItem(LS_SYNC) === "true");
       setSyncUI(savedSync);
@@ -490,18 +712,23 @@ html = """<!doctype html>
 
       setTimerText();
 
+      // save config -> auto sync on
       $("btnCfgSave").addEventListener("click", async () => {
         const u = (cfgUrl.value || "").trim();
         const k = (cfgKey.value || "").trim();
+        const remember = !!cfgRememberKey.checked;
 
         localStorage.setItem(LS_URL, u);
-        localStorage.setItem(LS_KEY, k);
+        writeKey(k, remember);
 
+        // reset client so new config is used
         sb = null;
         supabaseReady = false;
+        presenceMode = "unknown";
 
         urlPreview.textContent = u || "—";
         keyPreview.textContent = maskKey(k);
+
         flashCfg("保存した → SYNC ON");
 
         stopSync();
@@ -511,13 +738,19 @@ html = """<!doctype html>
 
       $("btnCfgClear").addEventListener("click", () => {
         localStorage.removeItem(LS_URL);
-        localStorage.removeItem(LS_KEY);
+        clearKey();
+
         cfgUrl.value = "";
         cfgKey.value = "";
+        cfgRememberKey.checked = false;
+
         sb = null;
         supabaseReady = false;
+        presenceMode = "unknown";
+
         urlPreview.textContent = "—";
         keyPreview.textContent = "—";
+
         flashCfg("消した");
         stopSync();
         setSyncUI(false);
@@ -525,6 +758,7 @@ html = """<!doctype html>
 
       $("btnSync").addEventListener("click", async () => { await unlockAudioOnce(); await toggleSync(); });
       $("btnCopyLink").addEventListener("click", async () => { await unlockAudioOnce(); copyShareLink(); });
+      $("btnNewRoom").addEventListener("click", async () => { await unlockAudioOnce(); createNewRoom(); });
 
       $("btnRoleNaco").addEventListener("click", async () => { await unlockAudioOnce(); setRoleUI("naco"); });
       $("btnRoleGuest").addEventListener("click", async () => { await unlockAudioOnce(); setRoleUI("guest"); });
@@ -545,21 +779,27 @@ html = """<!doctype html>
 
       const memoKey = "pw_memo_" + (roomId || "no_room");
       $("btnMemoSave").addEventListener("click", () => {
-        const v = $("memoInput").value || "";
+        const v = ($("memoInput").value || "");
         localStorage.setItem(memoKey, v);
         $("memoSaved").textContent = "保存した";
         setTimeout(()=> $("memoSaved").textContent="—", 1200);
       });
       $("memoInput").value = localStorage.getItem(memoKey) || "";
 
+      // previews
       urlPreview.textContent = (localStorage.getItem(LS_URL) || "").trim() || "—";
-      keyPreview.textContent = maskKey((localStorage.getItem(LS_KEY) || "").trim());
+      keyPreview.textContent = maskKey(readKey());
 
+      if (roomId) pushRecentRoom(roomId);
+
+      // autostart if previously on
       if (savedSync) startSync().catch(()=>{});
     }
 
     window.addEventListener("hashchange", () => {
-      stopSync(); setSyncUI(false); boot();
+      stopSync();
+      setSyncUI(false);
+      boot();
     });
 
     document.addEventListener("DOMContentLoaded", boot);
@@ -569,6 +809,6 @@ html = """<!doctype html>
 </html>
 """
 
-out_path = Path("/mnt/data/index_autosync.html")
+out_path = Path("/mnt/data/index_v5_base.html")
 out_path.write_text(html, encoding="utf-8")
 str(out_path)
