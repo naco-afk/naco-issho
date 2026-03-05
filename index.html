@@ -248,10 +248,10 @@ html = """<!doctype html>
       return h || null;
     }
     function nowIso(){ return new Date().toISOString(); }
-    function isValidSupabaseUrl(url){
+   function isValidSupabaseUrl(url){
   const re = new RegExp("^https://[a-z0-9-]+\\.supabase\\.co/?$");
   return typeof url === "string" && re.test(url);
-}
+　　}
   
     function maskKey(k){
       if (!k) return "—";
