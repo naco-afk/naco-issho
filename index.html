@@ -249,8 +249,10 @@ html = """<!doctype html>
     }
     function nowIso(){ return new Date().toISOString(); }
     function isValidSupabaseUrl(url){
-      return typeof url === "string" && /^https:\\/\\/[a-z0-9-]+\\.supabase\\.co\\/?$/.test(url);
-    }
+  const re = new RegExp("^https://[a-z0-9-]+\\.supabase\\.co/?$");
+  return typeof url === "string" && re.test(url);
+}
+  
     function maskKey(k){
       if (!k) return "—";
       if (k.length <= 14) return k;
