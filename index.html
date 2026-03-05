@@ -1043,21 +1043,16 @@ on("toggleRole","click", () => {
     if (error) throw error;
     if (!data) return;
     const isHost = (role === "host");
-    // 自分のステータスはpullで上書きしない（自分が押したものを守る）
-    // host = naco_status が自分、user_status が相手
-    // guest = user_status が自分、naco_status が相手
-    if (!isHost && typeof data.user_status === "string" && data.user_status_updated_at){
-      // guest の自分側は pull しない
-    } else if (typeof data.user_status === "string" && data.user_status_updated_at){
+    // 相手のステータスだけ pull する（自分のは絶対上書きしない）
+    // host = user_status が相手、guest = naco_status が相手
+    if (isHost && typeof data.user_status === "string" && data.user_status_updated_at){
       const localAt = load("user_status_at", null);
       if (!localAt || new Date(data.user_status_updated_at).getTime() > new Date(localAt).getTime()){
         save("user_status", data.user_status || "");
         save("user_status_at", data.user_status_updated_at);
       }
     }
-    if (isHost && typeof data.naco_status === "string" && data.naco_status_updated_at){
-      // host の自分側は pull しない
-    } else if (typeof data.naco_status === "string" && data.naco_status_updated_at){
+    if (!isHost && typeof data.naco_status === "string" && data.naco_status_updated_at){
       const localAt = load("naco_status_at", null);
       if (!localAt || new Date(data.naco_status_updated_at).getTime() > new Date(localAt).getTime()){
         save("naco_status", data.naco_status || "");
@@ -1128,23 +1123,16 @@ on("toggleRole","click", () => {
             const r = payload.new || {};
 
             const isHost = (role === "host");
-            // 自分のステータスはリアルタイム受信でも上書きしない
-            if (!isHost && typeof r.user_status === "string"){
+            // 相手のステータスだけ受け取る（自分のは上書きしない）
+            // host = naco_status が自分 → user_status（相手）だけ受け取る
+            // guest = user_status が自分 → naco_status（相手）だけ受け取る
+            if (isHost && typeof r.user_status === "string" && r.user_status_updated_at){
               save("user_status", r.user_status || "");
-              save("user_status_at", r.user_status_updated_at || new Date().toISOString());
+              save("user_status_at", r.user_status_updated_at);
             }
-            if (isHost && typeof r.naco_status === "string"){
+            if (!isHost && typeof r.naco_status === "string" && r.naco_status_updated_at){
               save("naco_status", r.naco_status || "");
-              save("naco_status_at", r.naco_status_updated_at || new Date().toISOString());
-            }
-            // 相手のステータスは受け取る
-            if (isHost && typeof r.user_status === "string"){
-              save("user_status", r.user_status || "");
-              save("user_status_at", r.user_status_updated_at || new Date().toISOString());
-            }
-            if (!isHost && typeof r.naco_status === "string"){
-              save("naco_status", r.naco_status || "");
-              save("naco_status_at", r.naco_status_updated_at || new Date().toISOString());
+              save("naco_status_at", r.naco_status_updated_at);
             }
             // last_active 専用カラムを受け取ってPresenceに反映
             if (r.last_active_host) save("last_active_host_at", r.last_active_host);
