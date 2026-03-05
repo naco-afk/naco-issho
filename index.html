@@ -74,7 +74,7 @@ html = """<!doctype html>
 <body>
   <div class="wrap">
     <div class="topbar">
-      <div class="brand">なこといっしょ <span class="sub">（個人版 / v4-fix+cfg）</span></div>
+      <div class="brand">なこといっしょ <span class="sub">（個人版 / v4-fix+cfg+autosync）</span></div>
       <div class="chips">
         <div class="chip"><span class="dot" id="dotSync"></span><b>SYNC</b>: <span id="syncText">OFF</span></div>
         <div class="chip"><b>ROOM</b>: <span class="mono" id="roomText">—</span></div>
@@ -112,9 +112,9 @@ html = """<!doctype html>
       </div>
 
       <div class="card">
-        <h2>同期設定（保存してゲストもON/OFFできる）</h2>
+        <h2>同期設定（保存 → 自動でSYNC ON）</h2>
         <div class="sub">
-          <b>SUPABASE_URL</b> は <span class="mono">https://xxxx.supabase.co</span><br />
+          <b>SUPABASE_URL</b> は <span class="mono">https://xxxx.supabase.co</span>（末尾 / OK）<br />
           <b>SUPABASE_ANON_KEY</b> は <span class="mono">sb_publishable_...</span>（secretは絶対入れない）
         </div>
         <div class="sep"></div>
@@ -129,7 +129,7 @@ html = """<!doctype html>
         <input id="cfgUrl" type="text" placeholder="SUPABASE_URL（https://xxxx.supabase.co）" />
         <input id="cfgKey" type="text" placeholder="SUPABASE_ANON_KEY（sb_publishable_...）" style="margin-top:8px;" />
         <div class="row" style="margin-top:10px;">
-          <button class="btn" id="btnCfgSave">接続情報を保存</button>
+          <button class="btn primary" id="btnCfgSave">接続情報を保存（→SYNC ON）</button>
           <button class="btn danger" id="btnCfgClear">消す</button>
           <span class="sub" id="cfgSaved">—</span>
         </div>
@@ -137,7 +137,7 @@ html = """<!doctype html>
         <div class="sep"></div>
 
         <div class="row">
-          <button class="btn primary" id="btnSync">SYNC ON/OFF</button>
+          <button class="btn" id="btnSync">SYNC ON/OFF</button>
           <button class="btn" id="btnCopyLink">共有リンクをコピー</button>
         </div>
 
@@ -183,8 +183,8 @@ html = """<!doctype html>
 
     const LS_URL = "SUPABASE_URL";
     const LS_KEY = "SUPABASE_ANON_KEY";
-    const LS_ROLE = "pw_role";   // "naco" or "guest"
-    const LS_SYNC = "pw_syncOn"; // "true"/"false"
+    const LS_ROLE = "pw_role";
+    const LS_SYNC = "pw_syncOn";
 
     const TABLE = "naco_rooms";
     const STATUS_GUEST = ["ネーム","作画","休憩","食事","打ち合わせ","離席","外出","寝てる","無理"];
@@ -248,11 +248,10 @@ html = """<!doctype html>
       return h || null;
     }
     function nowIso(){ return new Date().toISOString(); }
-   function isValidSupabaseUrl(url){
-  const re = new RegExp("^https://[a-z0-9-]+\\.supabase\\.co/?$");
-  return typeof url === "string" && re.test(url);
-　　}
-  
+    function isValidSupabaseUrl(url){
+      const re = new RegExp("^https://[a-z0-9-]+\\.supabase\\.co/?$");
+      return typeof url === "string" && re.test(url.trim());
+    }
     function maskKey(k){
       if (!k) return "—";
       if (k.length <= 14) return k;
@@ -270,14 +269,12 @@ html = """<!doctype html>
       keyPreview.textContent = maskKey(k);
 
       if (!u || !k){ supabaseReady=false; setErr("Supabase未設定（URL/KEY空）"); return false; }
-      if (!isValidSupabaseUrl(u)){ supabaseReady=false; setErr("Supabase URL形式が不正"); return false; }
+      if (!isValidSupabaseUrl(u)){ supabaseReady=false; setErr("SupabaseURL形式が不正"); return false; }
 
-      // すでに準備済みなら再生成しない（GoTrueClient多重を抑える）
       if (sb && supabaseReady) return true;
 
       sb = createClient(u, k, { auth:{ persistSession:false, autoRefreshToken:false } });
 
-      // ★必ず1本HTTPを出す（Networkに supabase.co が出る）
       const { error } = await sb.from(TABLE).select("room_id").limit(1);
       if (error){
         console.warn("[PING] error", error);
@@ -474,7 +471,6 @@ html = """<!doctype html>
 
       setRoleUI(role);
 
-      // cfg fields preload
       cfgUrl.value = (localStorage.getItem(LS_URL) || "").trim();
       cfgKey.value = (localStorage.getItem(LS_KEY) || "").trim();
 
@@ -494,17 +490,23 @@ html = """<!doctype html>
 
       setTimerText();
 
-      $("btnCfgSave").addEventListener("click", () => {
+      $("btnCfgSave").addEventListener("click", async () => {
         const u = (cfgUrl.value || "").trim();
         const k = (cfgKey.value || "").trim();
+
         localStorage.setItem(LS_URL, u);
         localStorage.setItem(LS_KEY, k);
-        // reset client so new config is used
+
         sb = null;
         supabaseReady = false;
+
         urlPreview.textContent = u || "—";
         keyPreview.textContent = maskKey(k);
-        flashCfg("保存した");
+        flashCfg("保存した → SYNC ON");
+
+        stopSync();
+        setSyncUI(true);
+        await startSync();
       });
 
       $("btnCfgClear").addEventListener("click", () => {
@@ -517,6 +519,8 @@ html = """<!doctype html>
         urlPreview.textContent = "—";
         keyPreview.textContent = "—";
         flashCfg("消した");
+        stopSync();
+        setSyncUI(false);
       });
 
       $("btnSync").addEventListener("click", async () => { await unlockAudioOnce(); await toggleSync(); });
@@ -548,7 +552,6 @@ html = """<!doctype html>
       });
       $("memoInput").value = localStorage.getItem(memoKey) || "";
 
-      // previews
       urlPreview.textContent = (localStorage.getItem(LS_URL) || "").trim() || "—";
       keyPreview.textContent = maskKey((localStorage.getItem(LS_KEY) || "").trim());
 
@@ -566,7 +569,6 @@ html = """<!doctype html>
 </html>
 """
 
-out_path = Path("/mnt/data/index_with_config_form.html")
+out_path = Path("/mnt/data/index_autosync.html")
 out_path.write_text(html, encoding="utf-8")
 str(out_path)
-
