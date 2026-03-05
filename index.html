@@ -451,10 +451,16 @@
       <div class="row" style="margin-top:8px;">
         <span class="pill" id="idlePill">自動離席 <span id="idleState" class="mono">ON</span></span>
         <button class="btn small" id="idleToggle">切替</button>
-        <span class="pill">分 <span id="idleMin" class="mono">60</span></span>
+        <span class="pill">離席まで <span id="idleMin" class="mono">60</span>分</span>
         <button class="btn small" id="idleMinus">-</button>
         <button class="btn small" id="idlePlus">+</button>
       </div>
+      <div class="row" style="margin-top:6px;">
+        <span class="pill">💤 寝てるまで <span id="sleepMin" class="mono">180</span>分</span>
+        <button class="btn small" id="sleepMinus">-</button>
+        <button class="btn small" id="sleepPlus">+</button>
+      </div>
+      <div class="label" style="margin-top:4px; font-size:11px; opacity:0.6;">離席後さらに無反応が続いたら「寝てる」に自動変更</div>
       </div><!-- /panelAuto -->
     </div>
   </div>
@@ -1586,14 +1592,19 @@ on("toggleRole","click", () => {
   // ---------- idle ----------
   let idleOn = load("idleOn", true);
   let idleMinutes = load("idleMinutes", 60);
+  let sleepMinutes = load("sleepMinutes", 180); // 離席後→寝てるまでの追加時間
   let lastActivityAt = Date.now();
   const idleStateEl = document.getElementById("idleState");
   const idleMinEl = document.getElementById("idleMin");
+  const sleepMinEl = document.getElementById("sleepMin");
+
   const renderIdle = () => {
     idleStateEl.textContent = idleOn ? "ON":"OFF";
     idleMinEl.textContent = String(idleMinutes);
+    if (sleepMinEl) sleepMinEl.textContent = String(sleepMinutes);
   };
   renderIdle();
+
   const mark = () => { lastActivityAt = Date.now(); };
   ["pointerdown","pointermove","keydown","scroll","touchstart"].forEach(evt=>window.addEventListener(evt, mark, {passive:true}));
 
@@ -1606,12 +1617,41 @@ on("toggleRole","click", () => {
   on("idlePlus","click", ()=>{
     idleMinutes = Math.min(240, idleMinutes+5); save("idleMinutes", idleMinutes); renderIdle();
   });
+  on("sleepMinus","click", ()=>{
+    sleepMinutes = Math.max(30, sleepMinutes-30); save("sleepMinutes", sleepMinutes); renderIdle();
+  });
+  on("sleepPlus","click", ()=>{
+    sleepMinutes = Math.min(720, sleepMinutes+30); save("sleepMinutes", sleepMinutes); renderIdle();
+  });
 
   setInterval(()=> {
     if (!idleOn) return;
-    const ms = idleMinutes*60*1000;
-    if (Date.now() - lastActivityAt < ms) return;
-    setNacoLocal("寝てる");
+    const elapsed = Date.now() - lastActivityAt;
+    const idleMs  = idleMinutes * 60 * 1000;
+    const sleepMs = (idleMinutes + sleepMinutes) * 60 * 1000;
+    const myStatus = (role === "host") ? load("naco_status","") : load("user_status","");
+
+    // 離席フェーズ：idleMinutes経過 → 「離席」
+    if (elapsed >= idleMs && myStatus !== "離席" && myStatus !== "寝てる") {
+      if (role === "host") {
+        setNacoLocal("離席");
+        if (syncOn && supabaseReady) pushStatusesRemote().catch(()=>{});
+      } else {
+        setUserLocal("離席");
+        if (syncOn && supabaseReady) pushStatusesRemote().catch(()=>{});
+      }
+    }
+
+    // 寝てるフェーズ：離席からさらにsleepMinutes経過 → 「寝てる」
+    if (elapsed >= sleepMs && myStatus !== "寝てる") {
+      if (role === "host") {
+        setNacoLocal("寝てる");
+        if (syncOn && supabaseReady) pushStatusesRemote().catch(()=>{});
+      } else {
+        setUserLocal("寝てる");
+        if (syncOn && supabaseReady) pushStatusesRemote().catch(()=>{});
+      }
+    }
   }, 5000);
 
   // ---------- header actions ----------
