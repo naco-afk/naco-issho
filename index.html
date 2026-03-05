@@ -1,4 +1,6 @@
-<!doctype html>
+from pathlib import Path
+
+html = """<!doctype html>
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
@@ -52,6 +54,7 @@
     .btn.primary{ border-color:#ffffff26; background:#6c83ff22; }
     .btn.small{ padding:7px 10px; font-size:12px; }
     .btn.active{ outline:2px solid #6c83ff66; }
+    .btn.danger{ border-color:#ff5c5c44; background:#ff5c5c1a; }
     .mono{ font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
     .big{ font-size:54px; letter-spacing:.03em; font-weight:800; line-height:1; }
     .sep{ height:1px; background:var(--line); margin:12px 0; }
@@ -71,7 +74,7 @@
 <body>
   <div class="wrap">
     <div class="topbar">
-      <div class="brand">なこといっしょ <span class="sub">（個人版 / v4-fix）</span></div>
+      <div class="brand">なこといっしょ <span class="sub">（個人版 / v4-fix+cfg）</span></div>
       <div class="chips">
         <div class="chip"><span class="dot" id="dotSync"></span><b>SYNC</b>: <span id="syncText">OFF</span></div>
         <div class="chip"><b>ROOM</b>: <span class="mono" id="roomText">—</span></div>
@@ -109,28 +112,41 @@
       </div>
 
       <div class="card">
-        <h2>同期設定（localStorage）</h2>
+        <h2>同期設定（保存してゲストもON/OFFできる）</h2>
         <div class="sub">
-          SUPABASE_URL は <span class="mono">https://xxxx.supabase.co</span><br />
-          SUPABASE_ANON_KEY は <span class="mono">sb_publishable_...</span>（secretは入れない）
+          <b>SUPABASE_URL</b> は <span class="mono">https://xxxx.supabase.co</span><br />
+          <b>SUPABASE_ANON_KEY</b> は <span class="mono">sb_publishable_...</span>（secretは絶対入れない）
         </div>
         <div class="sep"></div>
+
         <div class="row">
           <button class="btn" id="btnRoleNaco">ROLE: なこ</button>
           <button class="btn" id="btnRoleGuest">ROLE: ゲスト</button>
         </div>
+
         <div class="sep"></div>
+
+        <input id="cfgUrl" type="text" placeholder="SUPABASE_URL（https://xxxx.supabase.co）" />
+        <input id="cfgKey" type="text" placeholder="SUPABASE_ANON_KEY（sb_publishable_...）" style="margin-top:8px;" />
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" id="btnCfgSave">接続情報を保存</button>
+          <button class="btn danger" id="btnCfgClear">消す</button>
+          <span class="sub" id="cfgSaved">—</span>
+        </div>
+
+        <div class="sep"></div>
+
         <div class="row">
           <button class="btn primary" id="btnSync">SYNC ON/OFF</button>
           <button class="btn" id="btnCopyLink">共有リンクをコピー</button>
         </div>
+
         <div class="sep"></div>
+
         <div class="kv">
           <div>URL</div><div class="mono" id="urlPreview">—</div>
           <div>KEY</div><div class="mono" id="keyPreview">—</div>
         </div>
-        <div class="sep"></div>
-        <div class="sub">※ DevTools → Application → Local storage に入れてください</div>
       </div>
 
       <div class="card">
@@ -199,6 +215,10 @@
     const guestNow = $("guestNow");
     const nacoNow = $("nacoNow");
 
+    const cfgUrl = $("cfgUrl");
+    const cfgKey = $("cfgKey");
+    const cfgSaved = $("cfgSaved");
+
     let sb = null;
     let supabaseReady = false;
     let syncOn = false;
@@ -229,12 +249,16 @@
     }
     function nowIso(){ return new Date().toISOString(); }
     function isValidSupabaseUrl(url){
-      return typeof url === "string" && /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url);
+      return typeof url === "string" && /^https:\\/\\/[a-z0-9-]+\\.supabase\\.co\\/?$/.test(url);
     }
     function maskKey(k){
       if (!k) return "—";
       if (k.length <= 14) return k;
       return k.slice(0, 14) + "…" + k.slice(-6);
+    }
+    function flashCfg(text){
+      cfgSaved.textContent = text;
+      setTimeout(()=> cfgSaved.textContent="—", 1200);
     }
 
     async function initSupabase(){
@@ -245,6 +269,9 @@
 
       if (!u || !k){ supabaseReady=false; setErr("Supabase未設定（URL/KEY空）"); return false; }
       if (!isValidSupabaseUrl(u)){ supabaseReady=false; setErr("Supabase URL形式が不正"); return false; }
+
+      // すでに準備済みなら再生成しない（GoTrueClient多重を抑える）
+      if (sb && supabaseReady) return true;
 
       sb = createClient(u, k, { auth:{ persistSession:false, autoRefreshToken:false } });
 
@@ -445,6 +472,10 @@
 
       setRoleUI(role);
 
+      // cfg fields preload
+      cfgUrl.value = (localStorage.getItem(LS_URL) || "").trim();
+      cfgKey.value = (localStorage.getItem(LS_KEY) || "").trim();
+
       const savedSync = (localStorage.getItem(LS_SYNC) === "true");
       setSyncUI(savedSync);
 
@@ -460,6 +491,31 @@
       });
 
       setTimerText();
+
+      $("btnCfgSave").addEventListener("click", () => {
+        const u = (cfgUrl.value || "").trim();
+        const k = (cfgKey.value || "").trim();
+        localStorage.setItem(LS_URL, u);
+        localStorage.setItem(LS_KEY, k);
+        // reset client so new config is used
+        sb = null;
+        supabaseReady = false;
+        urlPreview.textContent = u || "—";
+        keyPreview.textContent = maskKey(k);
+        flashCfg("保存した");
+      });
+
+      $("btnCfgClear").addEventListener("click", () => {
+        localStorage.removeItem(LS_URL);
+        localStorage.removeItem(LS_KEY);
+        cfgUrl.value = "";
+        cfgKey.value = "";
+        sb = null;
+        supabaseReady = false;
+        urlPreview.textContent = "—";
+        keyPreview.textContent = "—";
+        flashCfg("消した");
+      });
 
       $("btnSync").addEventListener("click", async () => { await unlockAudioOnce(); await toggleSync(); });
       $("btnCopyLink").addEventListener("click", async () => { await unlockAudioOnce(); copyShareLink(); });
@@ -490,6 +546,10 @@
       });
       $("memoInput").value = localStorage.getItem(memoKey) || "";
 
+      // previews
+      urlPreview.textContent = (localStorage.getItem(LS_URL) || "").trim() || "—";
+      keyPreview.textContent = maskKey((localStorage.getItem(LS_KEY) || "").trim());
+
       if (savedSync) startSync().catch(()=>{});
     }
 
@@ -502,3 +562,8 @@
   </script>
 </body>
 </html>
+"""
+
+out_path = Path("/mnt/data/index_with_config_form.html")
+out_path.write_text(html, encoding="utf-8")
+str(out_path)
