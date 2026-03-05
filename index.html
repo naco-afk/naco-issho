@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>なこといっしょ</title>
+  <title>なこはうす</title>
   <style>
     :root{
       --bg:#0b1020;
@@ -77,7 +77,7 @@
       .oneLineSyncPill{justify-self:start}
     }
 
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+    .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.8fr);gap:14px;margin-top:14px}
     @media (max-width: 920px){.grid{grid-template-columns:1fr}}
     .card{border:1px solid var(--stroke);border-radius:22px;background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);box-shadow:0 18px 45px var(--shadow);padding:18px}
     .label{color:var(--muted);font-size:13px}
@@ -189,70 +189,56 @@
     .teaLabel{font-size:14px;font-weight:800;letter-spacing:.2px}
     .teaLabel .teaIcon{font-size:18px;line-height:1}
 
+    /* 進捗バッジ */
+    .pomoDot{
+      width:22px; height:22px; border-radius:50%;
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:10px; font-weight:800; transition: all .2s ease;
+    }
+    .pomoDot.done{
+      background: linear-gradient(135deg, #7ee6c4, #8aa6ff);
+      box-shadow: 0 0 8px rgba(126,230,196,.5);
+      color: #0a0f1a;
+    }
+    .pomoDot.todo{
+      border: 2px solid rgba(255,255,255,.15);
+      background: transparent;
+      color: transparent;
+    }
+    .pomoCount{
+      font-size:12px; font-weight:700; opacity:.6; margin-left:4px;
+    }
+    .tabBtn{ opacity:.55; transition:opacity .15s, background .15s; }
+    .tabBtn:hover{ opacity:.85; }
+    .tabBtn.active{ opacity:1; background:linear-gradient(180deg,rgba(126,230,196,.25),rgba(138,166,255,.18)); border-color:rgba(126,230,196,.45); font-weight:700; }
+    .chipAdd{ opacity:.5; border-style:dashed; font-size:18px; min-width:44px; }
+    .chipAdd:hover{ opacity:1; border-style:solid; }
+    .chipCustom{ position:relative; padding-right:30px !important; }
+    .chipDel{ position:absolute; right:7px; top:50%; transform:translateY(-50%); font-size:11px; opacity:.5; cursor:pointer; background:none; border:none; color:inherit; padding:2px; line-height:1; }
+    .chipDel:hover{ opacity:1; }
 
-/* ===== Compact mode (v1) ===== */
-:root{
-  --wrap-max: 920px;
-  --pad: 12px;
-  --radius: 16px;
-  --chip-pad-y: 6px;
-  --chip-pad-x: 10px;
-  --btn-pad-y: 8px;
-  --btn-pad-x: 11px;
-  --fs-13: 12.5px;
-  --fs-14: 13px;
-  --fs-16: 14.5px;
-  --fs-big: clamp(38px, 5vw, 50px);
-  --gap: 10px;
-}
+    /* スマホ対応 */
+    @media (max-width:600px){
+      .wrap{ padding:0 10px; margin:10px auto; }
+      h1{ font-size:16px; }
+      .big{ font-size:32px; }
+      .card{ padding:14px; border-radius:18px; }
+      .chip{ height:44px; padding:0 12px; font-size:14px; }
+      .btn{ padding:10px 12px; }
+      .btn.small{ padding:9px 11px; }
+      .grid{ gap:10px; margin-top:10px; }
+      #headerRight{ gap:6px; }
+      .sep{ margin:10px 0; }
+    }
+    @media (max-width:400px){
+      .big{ font-size:26px; }
+    }
 
-.wrap{ max-width: var(--wrap-max); padding: 14px; }
-.topbar, .top{ gap: 8px; margin-bottom: 10px; }
-.chips{ gap: 6px; }
-.chip{
-  padding: var(--chip-pad-y) var(--chip-pad-x);
-  font-size: var(--fs-13);
-}
-.card{ padding: var(--pad); border-radius: var(--radius); }
-.card h2{ font-size: var(--fs-14); margin-bottom: 8px; }
-.row{ gap: 6px; }
-.sep{ margin: 10px 0; }
+    /* 招待モーダル */
+    #inviteModal{ display:none; position:fixed; inset:0; z-index:9000; background:rgba(0,0,0,.6); align-items:center; justify-content:center; }
+    #inviteModal.open{ display:flex; }
+    #inviteCodeInput:focus{ border-color:var(--accent); outline:none; }
 
-.btn{
-  padding: var(--btn-pad-y) var(--btn-pad-x);
-  font-size: var(--fs-14);
-}
-.btn.small{ padding: 6px 9px; font-size: 12px; }
-.pill{ font-size: 12px; padding: 5px 9px; }
-
-.big, .timer, .time, #timerText{
-  font-size: var(--fs-big) !important;
-}
-
-/* Inputs */
-input[type="text"], input[type="password"]{
-  padding: 9px 11px;
-  border-radius: 12px;
-  font-size: 13px;
-}
-
-/* 2-column behavior: keep two columns on >= 860px, otherwise stack */
-.grid{ gap: var(--gap); }
-@media (min-width: 860px){
-  .grid{ grid-template-columns: 1.05fr .95fr; }
-}
-@media (max-width: 420px){
-  .chip{ font-size: 12px; }
-  .btn{ font-size: 12.5px; }
-}
-
-/* Reduce large empty space inside status boxes if present */
-.statusBox, .box, .panel, .card .inner{
-  padding: 10px;
-}
-
-/* Keep top chips from becoming too tall */
-.chip b{ font-weight: 800; }
 
 </style>
 </head>
@@ -260,23 +246,20 @@ input[type="text"], input[type="password"]{
 <div class="wrap">
   <div class="top">
     <div>
-      <h1>なこといっしょ</h1>
-      <div class="sub">いっしょに生活・作業しよう</div>
+      <h1>なこはうす <span style="font-size:13px; opacity:.4; font-weight:400;">（仮）</span></h1>
+      <div class="sub">なこのいる生活</div>
     </div>
     <div class="row" id="headerRight">
-      <span class="pill">ROOM: <span id="roomId" class="mono"></span>
-    <span class="pill tiny" id="presencePill">入室：<span id="presenceText" class="mono">0/2</span></span></span>
+      <span class="pill">🏠 <span id="roomId" class="mono"></span>
+    <span class="pill tiny" id="presencePill">👥 <span id="presenceText" class="mono">0/2</span></span></span>
       <span class="pill" id="rolePill">ROLE: <span id="roleText" class="mono">なこ</span></span>
       <button class="btn small" id="toggleRole">切替</button>
-
       <span class="pill" id="syncPill">SYNC: <span id="syncState" class="mono">OFF</span></span>
       <button class="btn small" id="toggleSync">切替</button>
-
       <span class="pill">ERR: <span id="errText" class="mono">—</span></span>
-
-      <span class="pill" id="nowPill">🗓 <span id="nowDate" class="mono">—</span> <span class="mono" id="nowTime">—</span> <span id="moonText">—</span></span>
-<button class="btn small" id="themeToggle">☀︎/🌙</button>
-      <button class="btn small" id="copyLink">共有リンクをコピー</button>
+      <span class="pill" id="nowPill" style="display:none;">🗓 <span id="nowDate" class="mono">—</span> <span class="mono" id="nowTime">—</span> <span id="moonText">—</span></span>
+      <button class="btn small" id="themeToggle">☀︎/🌙</button>
+      <button class="btn small" id="copyLink">🔗 共有</button>
     </div>
   </div>
 
@@ -311,18 +294,21 @@ input[type="text"], input[type="password"]{
   </details>
 
   <div class="grid">
-    <div class="card" id="pomoCard">
-      <div class="row" style="justify-content:space-between;">
-        <div>
+    <!-- ポモドーロ（左・折り畳み可） -->
+    <div class="card" id="pomoCard" style="align-self:start;">
+      <div class="row" style="justify-content:space-between; align-items:center;">
+        <div class="row" style="gap:10px; align-items:baseline;">
           <div class="label">ポモドーロ</div>
-          <div class="big mono" id="clock">25:00</div>
+          <div class="mono" id="clock" style="font-size:22px; font-weight:800;">25:00</div>
         </div>
-        <div class="row">
-          <button class="btn primary" id="startPauseBtn">はじめる</button>
-          <button class="btn" id="skipBtn">つぎへ</button>
-          <button class="btn warn" id="resetBtn">リセット</button>
+        <div class="row" style="gap:6px;">
+          <button class="btn primary" id="startPauseBtn" style="display:none;">はじめる</button>
+          <button class="btn" id="skipBtn" style="display:none;">つぎへ</button>
+          <button class="btn warn" id="resetBtn" style="display:none;">リセット</button>
+          <button class="btn small" id="pomoFoldBtn" style="border-radius:999px;" title="展開">▼ 展開</button>
         </div>
       </div>
+      <div id="pomoBody" style="display:none;">
 
       <div class="row" style="margin-top:10px;">
         <span class="pill" id="soundPill">音 <span id="soundState" class="mono">ON</span></span>
@@ -355,79 +341,46 @@ input[type="text"], input[type="password"]{
             <button class="chip" id="goal8">8</button>
           </div>
         </div>
-        <div class="label" style="margin-top:8px;">進捗：<span id="goalProg" class="mono">—</span></div>
-
-
+        <div class="label" style="margin-top:8px;">進捗</div>
+        <div id="goalProg" style="display:flex; gap:6px; align-items:center; margin-top:6px; flex-wrap:wrap;"></div>
 
       <div class="sep"></div>
-
       <div class="row" style="justify-content:space-between;">
         <div class="label">今日のポモ合計</div>
         <div class="mono"><strong id="pomoTotal">0</strong></div>
       </div>
       <div class="label" style="margin-top:6px;">最終更新：<span id="pomoUpdated" class="mono">—</span></div>
+
       <div class="sep"></div>
-      <div class="label">ガイド</div>
-      <div class="statusBox" style="margin-top:10px;">
-        <div class="row" style="justify-content:space-between;">
-          <div>いま：<strong id="nowModeMini">—</strong></div>
-        </div>
-        <div class="sep"></div>
-        
-        <div class="sep"></div>
-        
-        <div class="label">次にやる1つ</div>
-        <div class="row" style="margin-top:10px; align-items:flex-start;">
-          <div style="flex:1; min-width:240px;">
-            <input id="oneLineInput" type="text" placeholder="例：下書き3コマ / 背景1枚 / 食器だけ" style="width:100%;" />
-          </div>
-          <div class="row" style="gap:10px; align-items:center;">
-            <button class="btn small" id="oneLineSave">保存</button>
-          </div>
-        </div>
-        <div class="row" style="justify-content:space-between; margin-top:10px;">
-          <div class="label">最終更新：<span id="oneLineAt" class="mono">—</span> <span id="oneLineBy" class="mono" style="opacity:.85;"></span></div>
-          <span class="pill tiny">SYNC <span id="oneLineSyncState" class="mono">OFF</span></span>
-        </div>
-
-
-
-        <div class="row" style="justify-content:space-between; margin-top:8px;">
-          <div>ゲスト：<span id="guestMini">—</span></div>
-        <div class="sep"></div>
-        
-        <div class="label">生活</div>
-        <div class="lifeRow" style="margin-top:10px;">
-          <button class="chip" data-life="おはよう">おはよう</button>
-          <button class="chip" data-life="ただいま">ただいま</button>
-          <button class="chip" data-life="ねむい">ねむい</button>
-          <button class="chip" data-life="おやすみ">おやすみ</button>
-        </div>
-        <div class="label" style="margin-top:10px;">最後：<span id="lifeLast" class="mono">—</span> / <span id="lifeAt" class="mono">—</span></div>
-
-
-          <div>最終：<span id="guestMiniAt" class="mono">—</span></div>
-        </div>
-        <div class="row" style="justify-content:space-between; margin-top:8px;">
-          <div>🍵の番：<strong id="teaTurnMini">—</strong></div>
-          <div>最終：<span id="teaMiniAt" class="mono">—</span></div>
-        </div>
+      <div class="label" style="margin-bottom:8px;">📝 次にやる1つ <span style="opacity:.5;font-size:11px;">（ローカルのみ）</span></div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input id="oneLineInput" type="text" placeholder="例：下書き3コマ / 背景1枚" style="flex:1; padding:10px 12px; border-radius:14px; border:1px solid var(--stroke); background:rgba(255,255,255,.08); color:var(--text); font-size:14px;" />
+        <button class="btn small" id="oneLineSave">保存</button>
       </div>
-
+      <div class="label" style="margin-top:6px; font-size:12px;">最終更新：<span id="oneLineAt" class="mono">—</span></div>
+      <!-- 同期用の隠しスパン（JS互換） -->
+      <span id="oneLineBy" style="display:none;"></span>
+      <span id="oneLineSyncState" style="display:none;">OFF</span>
 
       <div style="margin-top:10px" class="bar"><div id="progressBar"></div></div>
+      </div><!-- /pomoBody -->
     </div>
 
     <div class="card">
-      <div class="row" style="justify-content:space-between; align-items:center;">
-  <div class="label">ステータス</div>
-  </div>
+      <div class="row" style="justify-content:space-between; align-items:center; flex-wrap:nowrap;">
+        <div class="label">ステータス</div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn small tabBtn active" data-panel="panelStatus" style="border-radius:999px;">ステータス</button>
+          <button class="btn small tabBtn" data-panel="panelLife" style="border-radius:999px;">生活・🍵</button>
+          <button class="btn small tabBtn" data-panel="panelAuto" style="border-radius:999px;">自動離席</button>
+        </div>
+      </div>
 
+      <!-- パネル：ステータス -->
+      <div id="panelStatus">
       <div class="sep"></div>
-      <div class="sep"></div>
-<div class="label">ゲスト</div>
-      <div class="row" style="margin-top:8px;">
-
+      <div class="label">ゲスト</div>
+      <div class="row" id="guestChips" style="margin-top:8px; flex-wrap:wrap; gap:8px;">
         <button class="chip" data-status="ネーム">ネーム</button>
         <button class="chip" data-status="作画">作画</button>
         <button class="chip" data-status="休憩">休憩</button>
@@ -437,6 +390,7 @@ input[type="text"], input[type="password"]{
         <button class="chip" data-status="外出">外出</button>
         <button class="chip" data-status="寝てる">寝てる</button>
         <button class="chip" data-status="無理">無理</button>
+        <button class="chip chipAdd" id="addGuestChip">＋</button>
       </div>
       <div class="statusBox" style="margin-top:10px;">
         <div>いま：<span id="userShow">未設定</span></div>
@@ -445,8 +399,7 @@ input[type="text"], input[type="password"]{
 
       <div class="sep"></div>
       <div class="label">なこ（自分）</div>
-      <div class="row" style="margin-top:8px;">
-
+      <div class="row" id="nacoChips" style="margin-top:8px; flex-wrap:wrap; gap:8px;">
         <button class="chip" data-naco="仕事">仕事</button>
         <button class="chip" data-naco="作業">作業</button>
         <button class="chip" data-naco="休憩">休憩</button>
@@ -455,47 +408,58 @@ input[type="text"], input[type="password"]{
         <button class="chip" data-naco="離席">離席</button>
         <button class="chip" data-naco="寝てる">寝てる</button>
         <button class="chip" data-naco="無理">無理</button>
+        <button class="chip chipAdd" id="addNacoChip">＋</button>
       </div>
       <div class="statusBox" style="margin-top:10px;">
         <div>いま：<span id="nacoShow">未設定</span></div>
         <div class="label">最終更新：<span id="nacoAt" class="mono">—</span></div>
       </div>
+      </div><!-- /panelStatus -->
 
+      <!-- パネル：生活・🍵 -->
+      <div id="panelLife" style="display:none;">
       <div class="sep"></div>
-      <div class="row" style="justify-content:space-between; align-items:flex-end;">
-        <div>
-          
-        <div class="sep"></div>
-        <div class="label">生活</div>
-        <div class="statusBox" style="margin-top:10px;">
-          <div class="row" style="justify-content:space-between;">
-            <div>最後：<span id="lifeLastR" class="mono">—</span></div>
-            <div><span id="lifeAtR" class="mono">—</span></div>
-          </div>
-        </div>
-<div class="label">🍵 <span class="mono" id="teaTurnText" style="opacity:.85;"></span></div>
-          <div class="label" id="teaDebug" style="display:none;">—</div>
-        </div>
-        <div class="row">
-          <button class="btn small primary" id="teaAction">🍵</button>
+      <div class="label">生活</div>
+      <div class="row" id="lifeChips" style="margin-top:8px; flex-wrap:wrap; gap:8px;">
+        <button class="chip" data-life="おはよう">おはよう</button>
+        <button class="chip" data-life="ただいま">ただいま</button>
+        <button class="chip" data-life="ねむい">ねむい</button>
+        <button class="chip" data-life="おやすみ">おやすみ</button>
+        <button class="chip chipAdd" id="addLifeChip">＋</button>
+      </div>
+      <div class="label" style="margin-top:8px;">最後：<span id="lifeLast" class="mono">—</span> / <span id="lifeAt" class="mono">—</span></div>
+      <div class="statusBox" style="margin-top:8px;">
+        <div class="row" style="justify-content:space-between;">
+          <div>最後：<span id="lifeLastR" class="mono">—</span></div>
+          <div><span id="lifeAtR" class="mono">—</span></div>
         </div>
       </div>
-      <div class="statusBox" style="margin-top:10px;">
+      <div class="sep"></div>
+      <div class="row" style="justify-content:space-between; align-items:center; margin-top:10px;">
+        <div class="label">🍵 <span class="mono" id="teaTurnText" style="opacity:.85;"></span></div>
+        <button class="btn small primary" id="teaAction">🍵</button>
+      </div>
+      <div class="statusBox" style="margin-top:8px;">
         <div class="row" style="justify-content:space-between;">
           <div><span class="label">待ち</span> <strong id="teaPending" class="mono">0</strong></div>
           <div><span class="label">回数</span> <strong id="teaTotal" class="mono">0</strong></div>
         </div>
         <div class="label" style="margin-top:6px;">最終更新：<span id="teaAt" class="mono">—</span></div>
       </div>
+      </div><!-- /panelLife -->
 
+      <!-- パネル：自動離席 -->
+      <div id="panelAuto" style="display:none;">
       <div class="sep"></div>
-      <div class="row">
+      <div class="label">自動離席</div>
+      <div class="row" style="margin-top:8px;">
         <span class="pill" id="idlePill">自動離席 <span id="idleState" class="mono">ON</span></span>
         <button class="btn small" id="idleToggle">切替</button>
         <span class="pill">分 <span id="idleMin" class="mono">60</span></span>
         <button class="btn small" id="idleMinus">-</button>
         <button class="btn small" id="idlePlus">+</button>
       </div>
+      </div><!-- /panelAuto -->
     </div>
   </div>
 </div>
@@ -509,6 +473,16 @@ input[type="text"], input[type="password"]{
     el.addEventListener(evt, fn);
   }
 (async () => {
+  // ---------- room & role from hash ----------
+  // ハッシュ形式: #roomId または #roomId:role
+  const _rawHash = (location.hash || "").replace("#","").trim();
+  const _hashParts = _rawHash.split(":");
+  const room = _hashParts[0] || Math.random().toString(36).slice(2,10);
+  const _roleFromHash = _hashParts[1] || ""; // "host" | "guest" | ""
+
+  if (!location.hash || !_hashParts[0]) location.hash = "#" + room;
+  document.getElementById("roomId").textContent = room;
+
   // ---------- utilities ----------
   const key = (k) => "pw_" + room + "_" + k;
   const timeAgo = (iso) => {
@@ -556,10 +530,6 @@ input[type="text"], input[type="password"]{
     }, 1100);
   };
 
-  // ---------- room ----------
-  const room = (location.hash || "").replace("#","").trim() || Math.random().toString(36).slice(2,10);
-  if (!location.hash) location.hash = "#" + room;
-  document.getElementById("roomId").textContent = room;
   // ---------- now (date/time/dow + full moon approx) ----------
   const nowDateEl = document.getElementById("nowDate");
     const nowTimeEl = document.getElementById("nowTime");
@@ -632,7 +602,9 @@ input[type="text"], input[type="password"]{
 
   // ---------- role ----------
   const roleText = document.getElementById("roleText");
-  let role = load("role","host"); // host | guest
+  let role = (_roleFromHash === "host" || _roleFromHash === "guest")
+    ? _roleFromHash
+    : load("role", "host");
   const renderRole = () => roleText.textContent = (role === "host" ? "なこ" : "ゲスト");
   renderRole();
 
@@ -995,10 +967,6 @@ on("toggleRole","click", () => {
     }catch(e){}
   };
 
-  document.querySelectorAll("[data-life]").forEach(btn => {
-    btn.addEventListener("click", () => { setLife(btn.getAttribute("data-life") || ""); });
-  });
-
   const setOneLineLocal = (text, atIso, by) => {
     oneLineText = (text || "").slice(0, 80);
     oneLineAtIso = atIso || new Date().toISOString();
@@ -1178,19 +1146,24 @@ on("toggleRole","click", () => {
     if (!syncOn || !supabaseReady) return;
     try { await pullStatusesRemote(); renderPresence(); } catch(e) {}
   }, 3000);
-document.querySelectorAll("[data-status]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const txt = btn.getAttribute("data-status") || "";
-      setUserLocal(txt);
-      if (syncOn && supabaseReady) { try{ await pushStatusesRemote(); }catch(e){ setErr("SYNC書込失敗"); } }
-    });
-  });
-  document.querySelectorAll("[data-naco]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const txt = btn.getAttribute("data-naco") || "";
-      setNacoLocal(txt);
-      if (syncOn && supabaseReady) { try{ await pushStatusesRemote(); }catch(e){ setErr("SYNC書込失敗"); } }
-    });
+
+  // チップクリック委譲（静的＋カスタム両対応）chipAddは除外
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-status],[data-naco],[data-life]");
+    if (!btn) return;
+    if (btn.classList.contains("chipAdd")) return; // ＋ボタンは除外
+    const status = btn.getAttribute("data-status");
+    const naco   = btn.getAttribute("data-naco");
+    const life   = btn.getAttribute("data-life");
+    if (status !== null) {
+      setUserLocal(status);
+      if (syncOn && supabaseReady) { try{ await pushStatusesRemote(); }catch(ex){ setErr("SYNC書込失敗"); } }
+    } else if (naco !== null) {
+      setNacoLocal(naco);
+      if (syncOn && supabaseReady) { try{ await pushStatusesRemote(); }catch(ex){ setErr("SYNC書込失敗"); } }
+    } else if (life !== null) {
+      await setLife(life);
+    }
   });
 
   // ---------- tea (ターン制・同期) ----------
@@ -1518,13 +1491,23 @@ document.querySelectorAll("[data-status]").forEach(btn => {
   const goalProgEl = document.getElementById("goalProg");
 
   const renderGoalPick = () => {
-    [goal4,goal6,goal8].forEach(b=>{ if(!b) return; b.style.opacity="0.65"; });
+    [goal4,goal6,goal8].forEach(b=>{ if(!b) return; b.style.opacity="0.55"; b.style.fontWeight=""; });
     const map = {4:goal4,6:goal6,8:goal8};
-    const b = map[goalTarget];
-    if (b) b.style.opacity="1";
+    const b = map[goalTarget]; if(b){ b.style.opacity="1"; b.style.fontWeight="800"; }
     const done = Math.min(workCount, goalTarget);
-    const dots = "▮".repeat(done) + "▯".repeat(Math.max(0, goalTarget-done));
-    if (goalProgEl) goalProgEl.textContent = `${dots}  ${done}/${goalTarget}`;
+    if (goalProgEl) {
+      goalProgEl.innerHTML = "";
+      for (let i = 0; i < goalTarget; i++) {
+        const dot = document.createElement("span");
+        dot.className = "pomoDot " + (i < done ? "done" : "todo");
+        if (i < done) dot.textContent = "✓";
+        goalProgEl.appendChild(dot);
+      }
+      const cnt = document.createElement("span");
+      cnt.className = "pomoCount";
+      cnt.textContent = `${done}/${goalTarget}`;
+      goalProgEl.appendChild(cnt);
+    }
   };
   const setGoal = (v) => { goalTarget = v; save("goalTarget", v); renderGoalPick(); };
   goal4 && goal4.addEventListener("click", ()=>setGoal(4));
@@ -1624,31 +1607,166 @@ document.querySelectorAll("[data-status]").forEach(btn => {
     if (!idleOn) return;
     const ms = idleMinutes*60*1000;
     if (Date.now() - lastActivityAt < ms) return;
-    // auto set sleep for self role status
     setNacoLocal("寝てる");
   }, 5000);
 
   // ---------- header actions ----------
   on("copyLink","click", async () => {
-    const url = location.origin + location.pathname + "#" + room;
-    try{
-      await navigator.clipboard.writeText(url);
-      showToast("共有リンクをコピーしたよ");
-      return;
-    }catch(e){}
-    try{
-      const tmp = document.createElement("input");
-      tmp.value = url;
-      tmp.style.position = "fixed";
-      tmp.style.left = "-9999px";
-      tmp.style.top = "0";
-      document.body.appendChild(tmp);
-      tmp.focus(); tmp.select();
-      const ok = document.execCommand("copy");
-      document.body.removeChild(tmp);
-      if (ok){ showToast("共有リンクをコピーしたよ"); return; }
-    }catch(e){}
-    window.prompt("共有リンク（手動でコピーしてね）", url);
+    const url = location.origin + location.pathname + "#" + room + ":guest";
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try { await navigator.clipboard.writeText(url); showToast("招待リンクをコピーしたよ 🔗","ゲストに送ってね"); return; } catch(e) {}
+    }
+    try {
+      const tmp = document.createElement("textarea");
+      tmp.value = url; tmp.setAttribute("readonly","");
+      tmp.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0;";
+      document.body.appendChild(tmp); tmp.focus(); tmp.select(); tmp.setSelectionRange(0,9999);
+      const ok = document.execCommand("copy"); document.body.removeChild(tmp);
+      if (ok) { showToast("招待リンクをコピーしたよ 🔗","ゲストに送ってね"); return; }
+    } catch(e) {}
+    showToast("リンク: " + url);
+  });
+
+  // ---------- ポモドーロ折り畳み ----------
+  const pomoBodyEl = document.getElementById("pomoBody");
+  const pomoFoldBtn = document.getElementById("pomoFoldBtn");
+  const clockEl2 = document.getElementById("clock");
+  const startPauseBtnEl = document.getElementById("startPauseBtn");
+  const skipBtnEl   = document.getElementById("skipBtn");
+  const resetBtnEl  = document.getElementById("resetBtn");
+  let pomoFolded = load("pomoFolded", true); // デフォルト折り畳み
+  const applyPomoFold = () => {
+    const f = pomoFolded;
+    if (pomoBodyEl)      pomoBodyEl.style.display      = f ? "none" : "";
+    if (startPauseBtnEl) startPauseBtnEl.style.display = f ? "none" : "";
+    if (skipBtnEl)       skipBtnEl.style.display       = f ? "none" : "";
+    if (resetBtnEl)      resetBtnEl.style.display      = f ? "none" : "";
+    if (clockEl2)        clockEl2.style.fontSize       = f ? "20px" : "44px";
+    if (pomoFoldBtn)     pomoFoldBtn.textContent        = f ? "▼ 展開" : "▲ 折り畳む";
+  };
+  applyPomoFold();
+  pomoFoldBtn && pomoFoldBtn.addEventListener("click", () => {
+    pomoFolded = !pomoFolded;
+    save("pomoFolded", pomoFolded);
+    applyPomoFold();
+  });
+
+  // ---------- 招待コード（初回モーダル） ----------
+  if (!_roleFromHash) {
+    // ロール未確定 → モーダル表示
+    const invMod = document.getElementById("inviteModal");
+    if (invMod) {
+      invMod.classList.add("open");
+      document.getElementById("inviteNewRoom").addEventListener("click", () => {
+        invMod.classList.remove("open");
+        role = "host"; save("role", role); renderRole();
+        location.hash = "#" + room + ":host";
+        showToast("ルームを作ったよ 🏠","🔗 共有ボタンでゲストを招待してね");
+      });
+      document.getElementById("inviteJoin").addEventListener("click", () => {
+        const code = (document.getElementById("inviteCodeInput").value||"").trim().split(":")[0];
+        if (!code) { showToast("コードを入力してね"); return; }
+        invMod.classList.remove("open");
+        location.href = location.origin + location.pathname + "#" + code + ":guest";
+      });
+      document.getElementById("inviteCodeInput").addEventListener("keydown",(e)=>{
+        if(e.key==="Enter") document.getElementById("inviteJoin").click();
+      });
+    }
+  } else {
+    // ハッシュにroleあり → 確定して保存
+    save("role", role);
+  }
+
+  // 「次にやる1つ」は既存JSが処理（同期OFF時はローカルのみ）
+
+  // ---------- カスタムチップ ----------
+  const _addCustomChip = (containerId, type, txt) => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const addBtn = container.querySelector(".chipAdd");
+    const btn = document.createElement("button");
+    btn.className = "chip chipCustom";
+    const attrName = { status:"data-status", naco:"data-naco", life:"data-life" }[type] || ("data-"+type);
+    btn.setAttribute(attrName, txt);
+    const del = document.createElement("span");
+    del.className = "chipDel"; del.textContent = "✕";
+    del.addEventListener("click",(e)=>{ e.stopPropagation(); btn.remove(); _saveCustom(); showToast("削除したよ",txt); });
+    btn.appendChild(document.createTextNode(txt));
+    btn.appendChild(del);
+    if (addBtn) container.insertBefore(btn, addBtn);
+    else container.appendChild(btn);
+  };
+  const _saveCustom = () => {
+    const col = (id, attr) => Array.from(document.querySelectorAll("#"+id+" ["+attr+"]")).filter(b=>b.classList.contains("chipCustom")).map(b=>b.getAttribute(attr));
+    save("customChips_status", col("guestChips","data-status"));
+    save("customChips_naco",   col("nacoChips", "data-naco"));
+    save("customChips_life",   col("lifeChips", "data-life"));
+  };
+
+  // インラインで入力フォームを出す（prompt()はサンドボックスでブロックされるため）
+  const _promptAdd = (containerId, type, anchorEl) => {
+    // すでに出てたら閉じる
+    const existing = document.getElementById("chipInlineForm");
+    if (existing) { existing.remove(); if (existing.dataset.for === containerId) return; }
+
+    const form = document.createElement("div");
+    form.id = "chipInlineForm";
+    form.dataset.for = containerId;
+    form.style.cssText = "display:flex;gap:6px;align-items:center;margin-top:8px;";
+    form.innerHTML = `
+      <input id="chipInlineInput" type="text" maxlength="10" placeholder="ラベル（最大10文字）"
+        style="flex:1;padding:8px 12px;border-radius:12px;border:1px solid var(--stroke);background:rgba(255,255,255,.1);color:var(--text);font-size:14px;min-width:0;">
+      <button class="btn small ok" id="chipInlineOk">追加</button>
+      <button class="btn small" id="chipInlineCancel">✕</button>
+    `;
+    // anchorElの親コンテナの後ろに挿入
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.after(form);
+
+    const input = document.getElementById("chipInlineInput");
+    const ok    = document.getElementById("chipInlineOk");
+    const cancel= document.getElementById("chipInlineCancel");
+    input.focus();
+
+    const commit = () => {
+      const t = (input.value||"").trim().slice(0,10);
+      form.remove();
+      if (!t) return;
+      _addCustomChip(containerId, type, t);
+      _saveCustom();
+      showToast("追加したよ ✨", t);
+    };
+    ok.addEventListener("click", commit);
+    cancel.addEventListener("click", ()=>form.remove());
+    input.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){e.preventDefault();commit();} if(e.key==="Escape")form.remove(); });
+  };
+
+  // 保存済みカスタムチップ復元
+  (load("customChips_status",[])||[]).forEach(t=>_addCustomChip("guestChips","status",t));
+  (load("customChips_naco",  [])||[]).forEach(t=>_addCustomChip("nacoChips", "naco",  t));
+  (load("customChips_life",  [])||[]).forEach(t=>_addCustomChip("lifeChips", "life",  t));
+
+  // ＋ボタン登録
+  const _ag = document.getElementById("addGuestChip");
+  const _an = document.getElementById("addNacoChip");
+  const _al = document.getElementById("addLifeChip");
+  _ag && _ag.addEventListener("click", (e)=>{ e.stopPropagation(); _promptAdd("guestChips","status",_ag); });
+  _an && _an.addEventListener("click", (e)=>{ e.stopPropagation(); _promptAdd("nacoChips","naco",_an); });
+  _al && _al.addEventListener("click", (e)=>{ e.stopPropagation(); _promptAdd("lifeChips","life",_al); });
+
+  // ---------- ステータスカード タブ切り替え ----------
+  const _panels = { panelStatus:1, panelLife:1, panelAuto:1 };
+  document.querySelectorAll(".tabBtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const target = btn.dataset.panel;
+      Object.keys(_panels).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = (id === target) ? "" : "none";
+      });
+      document.querySelectorAll(".tabBtn").forEach(b => b.classList.toggle("active", b.dataset.panel === target));
+    });
   });
 
   // init sync if already on
@@ -1657,5 +1775,19 @@ document.querySelectorAll("[data-status]").forEach(btn => {
 </script>
 
 <div id="toast" style="position:fixed;left:18px;bottom:18px;z-index:9999;pointer-events:none;opacity:0;transform:translateY(10px);transition:opacity .18s ease, transform .18s ease;max-width:min(420px, calc(100vw - 36px));"></div>
+
+<div id="inviteModal">
+  <div style="background:var(--panel);border:1px solid var(--stroke);border-radius:24px;padding:28px 24px;max-width:360px;width:calc(100% - 40px);box-shadow:0 24px 60px rgba(0,0,0,.5);">
+    <h2 style="margin:0 0 6px;font-size:18px;">なこはうす <span style="font-size:11px;opacity:.4;font-weight:400;">（仮）</span></h2>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 20px;">新しくルームを作るか、招待コードで入室してね</p>
+    <button class="btn primary" id="inviteNewRoom" style="width:100%;padding:14px;border-radius:16px;font-size:15px;font-weight:700;margin-bottom:12px;">🏠 新しいルームを作る（なこ）</button>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+      <input id="inviteCodeInput" type="text" placeholder="招待コードを入力" maxlength="20"
+        style="flex:1;padding:12px 14px;border-radius:14px;border:1px solid var(--stroke);background:rgba(255,255,255,.08);color:var(--text);font-size:15px;" />
+      <button class="btn ok" id="inviteJoin" style="padding:12px 16px;border-radius:14px;font-weight:700;white-space:nowrap;">入室</button>
+    </div>
+    <p style="color:var(--muted);font-size:12px;margin:0;text-align:center;">コードはホストから共有してもらってね</p>
+  </div>
+</div>
 </body>
 </html>
