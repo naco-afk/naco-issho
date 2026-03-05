@@ -1,4 +1,6 @@
-<!doctype html>
+from pathlib import Path
+
+html = """<!doctype html>
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
@@ -7,9 +9,10 @@
   <link rel="icon" href="data:,">
   <style>
     :root{
-      --bg1:#0b1020; --bg2:#141b2e; --card:#1a2238cc; --line:#ffffff1a;
+      --bg:#0b1020; --bg2:#141b2e; --panel:#1a2238cc; --line:#ffffff1a;
       --text:#e8eeff; --muted:#b9c2e0; --btn:#ffffff14; --btn2:#ffffff22;
-      --bad:#ff5c5c; --ok:#6ee7a5; --warn:#ffd36e; --radius:18px; --pad:14px;
+      --ok:#6ee7a5; --bad:#ff5c5c; --warn:#ffd36e; --accent:#6c83ff;
+      --radius:18px; --pad:14px;
       --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Hiragino Sans",
               "Noto Sans JP", "Meiryo", sans-serif;
     }
@@ -18,753 +21,837 @@
       margin:0; font-family:var(--font); color:var(--text); min-height:100vh;
       background: radial-gradient(1200px 700px at 30% 20%, #233058, transparent 60%),
                   radial-gradient(1000px 600px at 75% 30%, #2a1f4f, transparent 55%),
-                  linear-gradient(180deg, var(--bg1), var(--bg2));
+                  linear-gradient(180deg, var(--bg), var(--bg2));
     }
     .wrap{ max-width:980px; margin:0 auto; padding:18px; }
-    .topbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:14px; }
-    .brand{ font-weight:700; letter-spacing:.02em; }
+    .top{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .brand{ font-weight:800; letter-spacing:.02em; }
     .sub{ color:var(--muted); font-size:13px; }
     .chips{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
     .chip{
       padding:8px 12px; border:1px solid var(--line); background:#0b102666;
       border-radius:999px; font-size:13px; display:flex; gap:8px; align-items:center;
+      backdrop-filter: blur(8px);
     }
-    .chip b{ font-weight:700; }
     .dot{ width:8px; height:8px; border-radius:50%; background:var(--muted); display:inline-block; }
     .dot.ok{ background:var(--ok); }
+    .dot.bad{ background:var(--bad); }
+    .dot.warn{ background:var(--warn); }
+    .mono{ font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
     .grid{ display:grid; grid-template-columns:1fr; gap:12px; }
-    @media (min-width: 900px){ .grid{ grid-template-columns: 1.2fr .8fr; } }
+    @media (min-width: 900px){ .grid{ grid-template-columns: 1.15fr .85fr; } }
     .card{
-      background:var(--card); border:1px solid var(--line); border-radius:18px;
-      padding:14px; backdrop-filter: blur(10px);
+      background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+      padding:var(--pad); backdrop-filter: blur(10px);
     }
-    .card h2{ margin:0 0 10px; font-size:14px; color:var(--muted); font-weight:700; letter-spacing:.02em; }
+    .card h2{ margin:0 0 10px; font-size:14px; color:var(--muted); font-weight:800; letter-spacing:.02em; }
     .row{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
     .row.space{ justify-content:space-between; }
     .btn{
       appearance:none; border:1px solid var(--line); background:var(--btn); color:var(--text);
-      padding:10px 12px; border-radius:999px; font-weight:600; cursor:pointer;
-      transition:.15s transform, .15s background; user-select:none;
+      padding:10px 12px; border-radius:999px; font-weight:700; cursor:pointer; user-select:none;
+      transition:.15s transform, .15s background;
     }
     .btn:hover{ background:var(--btn2); }
     .btn:active{ transform: translateY(1px); }
-    .btn.primary{ border-color:#ffffff26; background:#6c83ff22; }
-    .btn.small{ padding:7px 10px; font-size:12px; }
-    .btn.active{ outline:2px solid #6c83ff66; }
+    .btn.primary{ border-color:#ffffff26; background: #6c83ff22; }
     .btn.danger{ border-color:#ff5c5c44; background:#ff5c5c1a; }
-    .mono{ font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
-    .big{ font-size:54px; letter-spacing:.03em; font-weight:800; line-height:1; }
+    .btn.small{ padding:7px 10px; font-size:12px; font-weight:700; }
+    .btn.active{ outline:2px solid #6c83ff66; }
+    .big{ font-size:54px; letter-spacing:.03em; font-weight:900; line-height:1; }
     .sep{ height:1px; background:var(--line); margin:12px 0; }
     .kv{ display:grid; grid-template-columns: 120px 1fr; gap:6px 10px; font-size:13px; }
     .kv div:nth-child(odd){ color:var(--muted); }
-    input[type="text"]{
+    input[type="text"], input[type="password"]{
       width:100%; border:1px solid var(--line); background:#0b102655; color:var(--text);
       padding:10px 12px; border-radius:12px; outline:none;
     }
-    input[type="text"]::placeholder{ color:#b9c2e066; }
+    input::placeholder{ color:#b9c2e066; }
     .pill{
       padding:6px 10px; border:1px solid var(--line); border-radius:999px; font-size:12px;
       color:var(--muted); background:#0b102655; display:inline-flex; gap:6px; align-items:center;
     }
-    .tiny{ font-size:12px; color:var(--muted); }
-    .list{
-      margin:8px 0 0; padding:0; list-style:none;
-      display:flex; flex-wrap:wrap; gap:8px;
-    }
-    .list li a{
-      display:inline-block; padding:7px 10px;
-      border:1px solid var(--line); border-radius:999px;
-      background:#0b102655; color:var(--text); text-decoration:none; font-size:12px;
-    }
-    .list li a:hover{ background:var(--btn2); }
+    details{ border:1px solid var(--line); border-radius:12px; padding:10px 12px; background:#0b102633; }
+    summary{ cursor:pointer; color:var(--muted); font-weight:800; }
+    .hint{ font-size:12px; color:var(--muted); line-height:1.4; }
+    .tabs{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .tab{ padding:7px 10px; border-radius:999px; border:1px solid var(--line); background:#0b102655; cursor:pointer; font-size:12px; font-weight:800; }
+    .tab.active{ outline:2px solid #6c83ff66; }
+    .hidden{ display:none !important; }
     label.chk{ display:flex; gap:8px; align-items:center; user-select:none; font-size:12px; color:var(--muted); margin-top:8px; }
     input[type="checkbox"]{ width:16px; height:16px; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="brand">なこといっしょ <span class="sub">（個人版 / v5-base-fixed）</span></div>
-      <div class="chips">
-        <div class="chip"><span class="dot" id="dotSync"></span><b>SYNC</b>: <span id="syncText">OFF</span></div>
-        <div class="chip"><b>ROOM</b>: <span class="mono" id="roomText">—</span></div>
-        <div class="chip"><b>入室</b>: <span class="mono" id="presenceText">0/2</span></div>
-        <div class="chip"><b>ROLE</b>: <span id="roleText">なこ</span></div>
-        <div class="chip"><b>ERR</b>: <span id="errText">—</span></div>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">なこといっしょ <span class="sub">（個人版 / v6-ui+1-3）</span></div>
+    <div class="chips">
+      <div class="chip"><span class="dot" id="dotSync"></span><b>SYNC</b>: <span id="syncText">OFF</span></div>
+      <div class="chip"><b>ROOM</b>: <span class="mono" id="roomText">—</span></div>
+      <div class="chip"><b>入室</b>: <span class="mono" id="presenceText">0/2</span></div>
+      <div class="chip"><b>ROLE</b>: <span id="roleText">なこ</span></div>
+      <div class="chip"><b>LOCK</b>: <span id="lockText">未解除</span></div>
+      <div class="chip"><b>ERR</b>: <span id="errText">—</span></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>ポモドーロ</h2>
+      <div class="row space">
+        <div class="big mono" id="timerText">25:00</div>
+        <div class="row">
+          <button class="btn primary" id="btnStart">はじめる</button>
+          <button class="btn" id="btnNext">つぎへ</button>
+          <button class="btn" id="btnReset">リセット</button>
+        </div>
+      </div>
+      <div class="sep"></div>
+      <div class="row">
+        <button class="btn small active" data-preset="25/5">25/5</button>
+        <button class="btn small" data-preset="30/5">30/5</button>
+        <button class="btn small" data-preset="50/10">50/10</button>
+        <span class="pill" title="ユーザー操作後に音が有効になります">🔊 <span id="soundText">ON</span></span>
+        <button class="btn small" id="btnSound">音 ON/OFF</button>
+      </div>
+      <div class="sep"></div>
+      <div class="kv">
+        <div>モード</div><div id="modeText">WORK</div>
+        <div>進捗</div><div><span id="pomoText">0</span> / <span id="pomoGoalText">6</span></div>
+        <div>最終更新</div><div id="lastUpdateText">—</div>
       </div>
     </div>
 
-    <div class="grid">
-      <div class="card">
-        <h2>ポモドーロ</h2>
-        <div class="row space">
-          <div class="big mono" id="timerText">25:00</div>
-          <div class="row">
-            <button class="btn primary" id="btnStart">はじめる</button>
-            <button class="btn" id="btnNext">つぎへ</button>
-            <button class="btn" id="btnReset">リセット</button>
-          </div>
-        </div>
-        <div class="sep"></div>
-        <div class="row">
-          <button class="btn small active" data-preset="25/5">25/5</button>
-          <button class="btn small" data-preset="30/5">30/5</button>
-          <button class="btn small" data-preset="50/10">50/10</button>
-          <span class="pill" title="ユーザー操作後に音が有効になります">🔊 <span id="soundText">ON</span></span>
-          <button class="btn small" id="btnSound">音 ON/OFF</button>
-        </div>
-        <div class="sep"></div>
-        <div class="kv">
-          <div>モード</div><div id="modeText">WORK</div>
-          <div>進捗</div><div><span id="pomoText">0</span> / <span id="pomoGoalText">6</span></div>
-          <div>最終更新</div><div id="lastUpdateText">—</div>
-        </div>
+    <div class="card">
+      <h2>同居セットアップ</h2>
+      <div class="row">
+        <button class="btn" id="btnRoleNaco">ROLE: なこ</button>
+        <button class="btn" id="btnRoleGuest">ROLE: ゲスト</button>
+        <button class="btn" id="btnNewRoom">新規ルーム作成</button>
+        <button class="btn" id="btnCopyLink">共有リンクをコピー</button>
       </div>
 
-      <div class="card">
-        <h2>同期設定（保存 → 自動でSYNC ON）</h2>
-        <div class="sub">
-          <b>SUPABASE_URL</b> は <span class="mono">https://xxxx.supabase.co</span>（末尾 / OK）<br />
-          <b>KEY</b> は <span class="mono">sb_publishable_...</span>（secretは絶対入れない）
-        </div>
+      <div class="tabs">
+        <button class="tab active" id="tabEasy">かんたん</button>
+        <button class="tab" id="tabDetail">詳細</button>
+      </div>
 
+      <div id="panelEasy" style="margin-top:10px;">
+        <div class="hint">
+          ① 同じURL（#roomId）を開く → ② 合言葉を入れて解除 → ③ SYNC ON<br/>
+          ※ 合言葉は「完全なセキュリティ」ではなく、誤参加/誤操作防止のロックです（本格防御はRLS/認証が必要）。
+        </div>
         <div class="sep"></div>
-
-        <div class="row">
-          <button class="btn" id="btnRoleNaco">ROLE: なこ</button>
-          <button class="btn" id="btnRoleGuest">ROLE: ゲスト</button>
-          <button class="btn" id="btnNewRoom">新規ルーム作成</button>
-          <button class="btn" id="btnCopyLink">共有リンクをコピー</button>
-        </div>
-
-        <div class="tiny" style="margin-top:8px;">
-          最近のルーム：
-          <ul class="list" id="recentRooms"></ul>
+        <input id="roomPass" type="password" placeholder="合言葉（roomごと）" />
+        <div class="row" style="margin-top:10px;">
+          <button class="btn primary" id="btnUnlock">ロック解除</button>
+          <button class="btn" id="btnLock">ロックする</button>
+          <span class="sub" id="unlockMsg">—</span>
         </div>
 
         <div class="sep"></div>
 
         <input id="cfgUrl" type="text" placeholder="SUPABASE_URL（https://xxxx.supabase.co）" />
         <input id="cfgKey" type="text" placeholder="KEY（sb_publishable_...）" style="margin-top:8px;" />
-        <label class="chk">
-          <input id="cfgRememberKey" type="checkbox" />
-          この端末にKEYを保存（共有PCではOFF推奨）
-        </label>
+        <label class="chk"><input id="cfgRememberKey" type="checkbox" />この端末にKEYを保存（共有PCではOFF推奨）</label>
         <div class="row" style="margin-top:10px;">
           <button class="btn primary" id="btnCfgSave">接続情報を保存（→SYNC ON）</button>
           <button class="btn danger" id="btnCfgClear">消す</button>
-          <span class="sub" id="cfgSaved">—</span>
         </div>
 
         <div class="sep"></div>
-
         <div class="row">
           <button class="btn" id="btnSync">SYNC ON/OFF</button>
         </div>
-
-        <div class="sep"></div>
-
-        <div class="kv">
-          <div>URL</div><div class="mono" id="urlPreview">—</div>
-          <div>KEY</div><div class="mono" id="keyPreview">—</div>
-        </div>
-
-        <div class="tiny" style="margin-top:8px;">
-          ※ SYNCがONにならない時は、ERRの文言（401/403/404など）を確認。
-        </div>
       </div>
 
-      <div class="card">
-        <h2>ステータス（同期対象）</h2>
-        <div class="sub">ボタンを押すと Supabase の <span class="mono">naco_rooms</span> に書き込み → 相手に反映</div>
-        <div class="sep"></div>
-
-        <div class="row"><span class="pill">ゲスト側</span></div>
-        <div class="row" id="guestButtons"></div>
-        <div class="sub">いま：<b id="guestNow">—</b></div>
-
-        <div class="sep"></div>
-
-        <div class="row"><span class="pill">なこ側</span></div>
-        <div class="row" id="nacoButtons"></div>
-        <div class="sub">いま：<b id="nacoNow">—</b></div>
-      </div>
-
-      <div class="card">
-        <h2>メモ（ローカル）</h2>
-        <div class="sub">まず status/presence を安定させるため、ここはローカル保存のみ</div>
-        <div class="sep"></div>
-        <input id="memoInput" type="text" placeholder="次にやること（例：下書き3コマ / 背景1枚）" />
-        <div class="row" style="margin-top:10px;">
-          <button class="btn" id="btnMemoSave">保存（ローカル）</button>
-          <span class="sub" id="memoSaved">—</span>
-        </div>
+      <div id="panelDetail" class="hidden" style="margin-top:10px;">
+        <details open>
+          <summary>接続情報（表示）</summary>
+          <div class="sep"></div>
+          <div class="kv">
+            <div>URL</div><div class="mono" id="urlPreview">—</div>
+            <div>KEY</div><div class="mono" id="keyPreview">—</div>
+          </div>
+          <div class="sep"></div>
+          <div class="hint">
+            ERRが出るとき：401=KEY/権限、403=RLS/権限、404=テーブル名、400=列/クエリ不整合。
+          </div>
+        </details>
+        <details>
+          <summary>最近のルーム</summary>
+          <div class="sep"></div>
+          <div class="row" id="recentRooms"></div>
+        </details>
       </div>
     </div>
+
+    <div class="card">
+      <h2>ステータス（同期）</h2>
+      <div class="hint">ボタンを押すと Supabase に書き込み → 相手に反映</div>
+      <div class="sep"></div>
+
+      <div class="row"><span class="pill">ゲスト</span></div>
+      <div class="row" id="guestButtons"></div>
+      <div class="hint">いま：<b id="guestNow">—</b></div>
+
+      <div class="sep"></div>
+
+      <div class="row"><span class="pill">なこ</span></div>
+      <div class="row" id="nacoButtons"></div>
+      <div class="hint">いま：<b id="nacoNow">—</b></div>
+    </div>
+
+    <div class="card">
+      <h2>生活・お茶・メモ（同期）</h2>
+      <div class="hint">“同居感”用。合言葉解除 + SYNC ON のときだけ送信されます。</div>
+      <div class="sep"></div>
+
+      <div class="row"><span class="pill">生活（なこ）</span></div>
+      <div class="row">
+        <button class="btn small" data-life="おはよう">おはよう</button>
+        <button class="btn small" data-life="ただいま">ただいま</button>
+        <button class="btn small" data-life="ねむい">ねむい</button>
+        <button class="btn small" data-life="おやすみ">おやすみ</button>
+      </div>
+      <div class="hint">最後：<b id="lifeNow">—</b> <span id="lifeAt"></span></div>
+
+      <div class="sep"></div>
+
+      <div class="row space">
+        <div class="row"><span class="pill">🍵 お茶</span><span class="hint">回数：<b id="teaCount">0</b></span></div>
+        <button class="btn" id="btnTea">いれる（渡す）</button>
+      </div>
+      <div class="hint">最後：<span id="teaAt">—</span></div>
+
+      <div class="sep"></div>
+
+      <div class="row"><span class="pill">次にやる1つ（共有メモ）</span></div>
+      <input id="memoInput" type="text" placeholder="例：下書き3コマ / 背景1枚 / 食器だけ" />
+      <div class="row" style="margin-top:10px;">
+        <button class="btn primary" id="btnMemoSave">保存（同期）</button>
+        <button class="btn" id="btnMemoClear">空にする</button>
+        <span class="sub" id="memoSaved">—</span>
+      </div>
+      <div class="hint">最終更新：<span id="memoAt">—</span></div>
+
+      <div class="sep"></div>
+
+      <details>
+        <summary>DBカラム（未追加ならフォールバックで動く）</summary>
+        <div class="sep"></div>
+        <div class="hint mono">
+-- presence（必須推奨）<br>
+alter table public.naco_rooms<br>
+  add column if not exists host_last_seen timestamptz,<br>
+  add column if not exists guest_last_seen timestamptz;<br><br>
+-- 同居感（任意）<br>
+alter table public.naco_rooms<br>
+  add column if not exists naco_life text,<br>
+  add column if not exists naco_life_updated_at timestamptz,<br>
+  add column if not exists tea_count int4 default 0,<br>
+  add column if not exists tea_updated_at timestamptz,<br>
+  add column if not exists shared_memo text,<br>
+  add column if not exists shared_memo_updated_at timestamptz;<br>
+        </div>
+      </details>
+    </div>
   </div>
+</div>
 
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+<script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    const LS_URL = "SUPABASE_URL";
-    const LS_KEY = "SUPABASE_KEY";
-    const SS_KEY = "SUPABASE_KEY_SESSION";
-    const LS_REMEMBER = "SUPABASE_REMEMBER_KEY";
+  const LS_URL = "SUPABASE_URL";
+  const LS_KEY = "SUPABASE_KEY";
+  const SS_KEY = "SUPABASE_KEY_SESSION";
+  const LS_REMEMBER = "SUPABASE_REMEMBER_KEY";
 
-    const LS_ROLE = "pw_role";
-    const LS_SYNC = "pw_syncOn";
-    const LS_ROOMS = "pw_recent_rooms";
+  const LS_ROLE = "pw_role";
+  const LS_SYNC = "pw_syncOn";
+  const LS_ROOMS = "pw_recent_rooms";
+  const SS_PASS = "pw_room_pass";
 
-    const TABLE = "naco_rooms";
-    const STATUS_GUEST = ["ネーム","作画","休憩","食事","打ち合わせ","離席","外出","寝てる","無理"];
-    const STATUS_NACO  = ["仕事","作業","休憩","食事","外出","離席","寝てる","無理"];
-    const TTL_MS = 70_000;
+  const TABLE = "naco_rooms";
+  const STATUS_GUEST = ["ネーム","作画","休憩","食事","打ち合わせ","離席","外出","寝てる","無理"];
+  const STATUS_NACO  = ["仕事","作業","休憩","食事","外出","離席","寝てる","無理"];
+  const TTL_MS = 70_000;
 
-    const $ = (id) => document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
 
-    const dotSync = $("dotSync");
-    const syncText = $("syncText");
-    const roomText = $("roomText");
-    const roleText = $("roleText");
-    const presenceText = $("presenceText");
-    const errText = $("errText");
-    const lastUpdateText = $("lastUpdateText");
-    const urlPreview = $("urlPreview");
-    const keyPreview = $("keyPreview");
-    const recentRooms = $("recentRooms");
+  const dotSync = $("dotSync");
+  const syncText = $("syncText");
+  const roomText = $("roomText");
+  const roleText = $("roleText");
+  const presenceText = $("presenceText");
+  const errText = $("errText");
+  const lockText = $("lockText");
 
-    const timerText = $("timerText");
-    const modeText = $("modeText");
-    const pomoText = $("pomoText");
-    const pomoGoalText = $("pomoGoalText");
-    const soundText = $("soundText");
+  const timerText = $("timerText");
+  const modeText = $("modeText");
+  const pomoText = $("pomoText");
+  const pomoGoalText = $("pomoGoalText");
+  const soundText = $("soundText");
+  const lastUpdateText = $("lastUpdateText");
 
-    const guestButtons = $("guestButtons");
-    const nacoButtons = $("nacoButtons");
-    const guestNow = $("guestNow");
-    const nacoNow = $("nacoNow");
+  const cfgUrl = $("cfgUrl");
+  const cfgKey = $("cfgKey");
+  const cfgRememberKey = $("cfgRememberKey");
+  const urlPreview = $("urlPreview");
+  const keyPreview = $("keyPreview");
 
-    const cfgUrl = $("cfgUrl");
-    const cfgKey = $("cfgKey");
-    const cfgRememberKey = $("cfgRememberKey");
-    const cfgSaved = $("cfgSaved");
+  const tabEasy = $("tabEasy");
+  const tabDetail = $("tabDetail");
+  const panelEasy = $("panelEasy");
+  const panelDetail = $("panelDetail");
 
-    let sb = null;
-    let supabaseReady = false;
-    let syncOn = false;
+  const roomPass = $("roomPass");
+  const btnUnlock = $("btnUnlock");
+  const btnLock = $("btnLock");
+  const unlockMsg = $("unlockMsg");
 
-    let role = (localStorage.getItem(LS_ROLE) || "naco");
-    let roomId = null;
+  const guestButtons = $("guestButtons");
+  const nacoButtons = $("nacoButtons");
+  const guestNow = $("guestNow");
+  const nacoNow = $("nacoNow");
 
-    let pollTimer = null;
-    let hbTimer = null;
+  const lifeNow = $("lifeNow");
+  const lifeAt = $("lifeAt");
+  const teaCount = $("teaCount");
+  const teaAt = $("teaAt");
+  const memoInput = $("memoInput");
+  const memoSaved = $("memoSaved");
+  const memoAt = $("memoAt");
 
-    // presence mode: "last_seen" if DB supports, else "status_time"
-    let presenceMode = "unknown";
+  let sb = null;
+  let supabaseReady = false;
+  let syncOn = false;
+  let role = (localStorage.getItem(LS_ROLE) || "naco");
+  let roomId = null;
 
-    function setErr(msg){ errText.textContent = msg || "—"; }
-    function flashCfg(text){
-      cfgSaved.textContent = text;
-      setTimeout(()=> cfgSaved.textContent="—", 1400);
-    }
-    function setSyncUI(on){
-      syncOn = !!on;
-      syncText.textContent = syncOn ? "ON" : "OFF";
-      dotSync.className = "dot " + (syncOn ? "ok" : "");
-      localStorage.setItem(LS_SYNC, String(syncOn));
-    }
-    function setRoleUI(r){
-      role = r;
-      roleText.textContent = (role === "naco") ? "なこ" : "ゲスト";
-      localStorage.setItem(LS_ROLE, role);
-      $("btnRoleNaco").classList.toggle("active", role === "naco");
-      $("btnRoleGuest").classList.toggle("active", role === "guest");
-    }
-    function getHashRoomId(){
-      const h = (location.hash || "").replace(/^#/, "").trim();
-      return h || null;
-    }
-    function nowIso(){ return new Date().toISOString(); }
+  let pollTimer = null;
+  let hbTimer = null;
+  let presenceMode = "unknown";
 
-    function isValidSupabaseUrl(url){
-      const re = new RegExp("^https://[a-z0-9-]+\.supabase\.co/?$");
-      return typeof url === "string" && re.test(url.trim());
-    }
+  let soundOn = true;
+  let audioUnlocked = false;
 
-    function maskKey(k){
-      if (!k) return "—";
-      if (k.length <= 14) return k;
-      return k.slice(0, 14) + "…" + k.slice(-6);
-    }
+  let tickTimer = null;
+  let remainingSec = 25 * 60;
+  let presetWork = 25 * 60;
+  let presetBreak = 5 * 60;
+  let mode = "WORK";
+  let pomo = 0;
+  const pomoGoal = 6;
 
-    function readRememberFlag(){
-      return (localStorage.getItem(LS_REMEMBER) === "true");
-    }
+  function setErr(msg){ errText.textContent = msg || "—"; }
+  function setSyncUI(on){
+    syncOn = !!on;
+    syncText.textContent = syncOn ? "ON" : "OFF";
+    dotSync.className = "dot " + (syncOn ? "ok" : "");
+    localStorage.setItem(LS_SYNC, String(syncOn));
+  }
+  function setRoleUI(r){
+    role = r;
+    roleText.textContent = (role === "naco") ? "なこ" : "ゲスト";
+    localStorage.setItem(LS_ROLE, role);
+    $("btnRoleNaco").classList.toggle("active", role === "naco");
+    $("btnRoleGuest").classList.toggle("active", role === "guest");
+  }
+  function getHashRoomId(){
+    const h = (location.hash || "").replace(/^#/, "").trim();
+    return h || null;
+  }
+  function nowIso(){ return new Date().toISOString(); }
+  function maskKey(k){
+    if (!k) return "—";
+    if (k.length <= 14) return k;
+    return k.slice(0, 14) + "…" + k.slice(-6);
+  }
+  function isValidSupabaseUrl(url){
+    const re = new RegExp("^https://[a-z0-9-]+\\.supabase\\.co/?$");
+    return typeof url === "string" && re.test((url || "").trim());
+  }
+  function readRememberFlag(){ return (localStorage.getItem(LS_REMEMBER) === "true"); }
+  function readKey(){
+    const sk = (sessionStorage.getItem(SS_KEY) || "").trim();
+    if (sk) return sk;
+    const lk = (localStorage.getItem(LS_KEY) || "").trim();
+    return lk;
+  }
+  function writeKey(key, remember){
+    const k = (key || "").trim();
+    sessionStorage.setItem(SS_KEY, k);
+    if (remember) localStorage.setItem(LS_KEY, k);
+    else localStorage.removeItem(LS_KEY);
+    localStorage.setItem(LS_REMEMBER, String(remember));
+  }
+  function clearKey(){
+    sessionStorage.removeItem(SS_KEY);
+    localStorage.removeItem(LS_KEY);
+    localStorage.removeItem(LS_REMEMBER);
+  }
 
-    function readKey(){
-      const sk = (sessionStorage.getItem(SS_KEY) || "").trim();
-      if (sk) return sk;
-      const lk = (localStorage.getItem(LS_KEY) || "").trim();
-      return lk;
-    }
-
-    function writeKey(key, remember){
-      const k = (key || "").trim();
-      sessionStorage.setItem(SS_KEY, k);
-      if (remember){
-        localStorage.setItem(LS_KEY, k);
-      }else{
-        localStorage.removeItem(LS_KEY);
-      }
-      localStorage.setItem(LS_REMEMBER, String(remember));
-    }
-
-    function clearKey(){
-      sessionStorage.removeItem(SS_KEY);
-      localStorage.removeItem(LS_KEY);
-      localStorage.removeItem(LS_REMEMBER);
-    }
-
-    function setErrFromStatus(status, fallback){
-      if (!status){
-        setErr(fallback || "通信失敗（ネットワーク/ブロック）");
-        return;
-      }
-      if (status === 401){
-        setErr("401: KEYが無効/違う（publishable/anonの取り違え含む）");
-      }else if (status === 403){
-        setErr("403: 権限(RLS)で拒否。テーブル許可/ポリシー要確認");
-      }else if (status === 404){
-        setErr("404: テーブル/スキーマが違う（naco_roomsの存在確認）");
-      }else{
-        setErr(String(status) + ": Supabase応答エラー");
-      }
-    }
-
-    function baseUrlForShare(){
-      return location.origin + location.pathname;
-    }
-
-    function buildShareUrl(rid){
-      return baseUrlForShare() + "#" + rid;
-    }
-
-    function copyText(text){
-      const c = navigator.clipboard;
-      if (c && c.writeText) return c.writeText(text).catch(()=>{});
-      return Promise.resolve();
-    }
-
-    function parseRooms(){
-      try{
-        const v = JSON.parse(localStorage.getItem(LS_ROOMS) || "[]");
-        return Array.isArray(v) ? v : [];
-      }catch{ return []; }
-    }
-
-    function renderRecentRooms(arr){
-      recentRooms.innerHTML = "";
-      const list = (arr && arr.length) ? arr : [];
-      if (list.length === 0){
-        const li = document.createElement("li");
-        const a = document.createElement("a");
-        a.href = "#";
-        a.textContent = "なし";
-        a.addEventListener("click", (e)=>e.preventDefault());
-        li.appendChild(a);
-        recentRooms.appendChild(li);
-        return;
-      }
-      list.forEach(rid => {
-        const li = document.createElement("li");
-        const a = document.createElement("a");
-        a.href = buildShareUrl(rid);
-        a.textContent = rid;
-        li.appendChild(a);
-        recentRooms.appendChild(li);
-      });
-    }
-
-    function pushRecentRoom(rid){
-      if (!rid) return;
-      const arr0 = parseRooms();
-      const arr = [rid].concat(arr0.filter(x => x !== rid)).slice(0, 8);
-      localStorage.setItem(LS_ROOMS, JSON.stringify(arr));
-      renderRecentRooms(arr);
-    }
-
-    function newRoomId(){
-      if (crypto && crypto.randomUUID) return crypto.randomUUID().slice(0, 8);
-      return Math.random().toString(36).slice(2, 10);
-    }
-
-    async function initSupabase(){
-      const u0 = (localStorage.getItem(LS_URL) || "").trim();
-      const k = readKey();
-
-      urlPreview.textContent = u0 || "—";
-      keyPreview.textContent = maskKey(k);
-
-      if (!u0 || !k){ supabaseReady=false; setErr("未設定: URLまたはKEYが空"); return false; }
-      if (!isValidSupabaseUrl(u0)){ supabaseReady=false; setErr("SupabaseURL形式が不正（末尾 / OK）"); return false; }
-
-      if (sb && supabaseReady) return true;
-
-      const u = u0.trim().replace(/\/+$/,""); // remove trailing slashes safely
-      sb = createClient(u, k, { auth:{ persistSession:false, autoRefreshToken:false } });
-
-      const ping = await sb.from(TABLE).select("room_id").limit(1);
-      if (ping.error){
-        console.warn("[PING] error", ping.error);
-        supabaseReady=false;
-        setErrFromStatus(ping.error.status, "PING失敗");
-        return false;
-      }
-
-      supabaseReady=true;
-      setErr("—");
+  function passStorageKey(){ return `${SS_PASS}:${roomId || ""}`; }
+  function isUnlocked(){
+    if (!roomId) return false;
+    return !!(sessionStorage.getItem(passStorageKey()) || "");
+  }
+  function setUnlocked(on){
+    if (!roomId) return false;
+    if (on){
+      const p = (roomPass.value || "").trim();
+      if (!p){ unlockMsg.textContent = "合言葉が空"; return false; }
+      sessionStorage.setItem(passStorageKey(), p);
+      lockText.textContent = "解除";
+      unlockMsg.textContent = "解除した";
+      setTimeout(()=>unlockMsg.textContent="—", 900);
       return true;
     }
+    sessionStorage.removeItem(passStorageKey());
+    lockText.textContent = "未解除";
+    unlockMsg.textContent = "ロックした";
+    setTimeout(()=>unlockMsg.textContent="—", 900);
+    return true;
+  }
+  function updateLockUI(){ lockText.textContent = isUnlocked() ? "解除" : "未解除"; }
 
-    async function ensureRoomRow(){
-      const payload = { room_id: roomId, updated_at: nowIso() };
-      const res = await sb.from(TABLE).upsert(payload, { onConflict:"room_id" });
-      if (res.error) throw res.error;
+  function setErrFromStatus(status, fallback){
+    if (!status){ setErr(fallback || "通信失敗（ネットワーク/ブロック）"); return; }
+    if (status === 401) setErr("401: KEYが無効/違う（publishable/anonの取り違え含む）");
+    else if (status === 403) setErr("403: 権限(RLS)で拒否。ポリシー要確認");
+    else if (status === 404) setErr("404: テーブル名/スキーマ違い（naco_rooms確認）");
+    else if (status === 400) setErr("400: 列/クエリ不整合（カラム追加反映/コード更新）");
+    else setErr(`${status}: Supabase応答エラー`);
+  }
+
+  function parseRooms(){
+    try{ const v = JSON.parse(localStorage.getItem(LS_ROOMS) || "[]"); return Array.isArray(v)?v:[]; }
+    catch{ return []; }
+  }
+  function renderRecentRooms(arr){
+    const host = $("recentRooms");
+    if (!host) return;
+    host.innerHTML = "";
+    (arr||[]).slice(0,8).forEach(rid=>{
+      const a = document.createElement("a");
+      a.className = "btn small";
+      a.href = `${location.origin}${location.pathname}#${rid}`;
+      a.textContent = rid;
+      host.appendChild(a);
+    });
+    if (!arr || arr.length === 0){
+      const s = document.createElement("span");
+      s.className = "pill";
+      s.textContent = "なし";
+      host.appendChild(s);
     }
+  }
+  function pushRecentRoom(rid){
+    if (!rid) return;
+    const arr0 = parseRooms();
+    const arr = [rid, ...arr0.filter(x=>x!==rid)].slice(0,8);
+    localStorage.setItem(LS_ROOMS, JSON.stringify(arr));
+    renderRecentRooms(arr);
+  }
+  function newRoomId(){
+    if (crypto?.randomUUID) return crypto.randomUUID().slice(0, 8);
+    return Math.random().toString(36).slice(2, 10);
+  }
+  function copyText(text){
+    const c = navigator.clipboard;
+    if (c && c.writeText) return c.writeText(text).catch(()=>{});
+    return Promise.resolve();
+  }
+  function baseUrlForShare(){ return location.origin + location.pathname; }
+  function buildShareUrl(rid){ return `${baseUrlForShare()}#${rid}`; }
 
-    function statusCols(){
-      if (role === "naco") return { statusCol:"naco_status", timeCol:"naco_status_updated_at" };
-      return { statusCol:"user_status", timeCol:"user_status_updated_at" };
+  async function initSupabase(){
+    const u0 = (localStorage.getItem(LS_URL) || "").trim();
+    const k = readKey();
+    if (urlPreview) urlPreview.textContent = u0 || "—";
+    if (keyPreview) keyPreview.textContent = maskKey(k);
+
+    if (!u0 or !k){ supabaseReady=false; setErr("未設定: URLまたはKEYが空"); return false; }
+    if (!isValidSupabaseUrl(u0)){ supabaseReady=false; setErr("SupabaseURL形式が不正（末尾 / OK）"); return false; }
+
+    if (sb and supabaseReady) return true;
+    const u = u0.replace(/\\/+$/,"");
+    sb = createClient(u, k, { auth:{ persistSession:false, autoRefreshToken:false } });
+
+    const ping = await sb.from(TABLE).select("room_id").limit(1);
+    if (ping.error){
+      supabaseReady=false;
+      console.warn("[PING] error", ping.error);
+      setErrFromStatus(ping.error.status, "PING失敗");
+      return false;
     }
+    supabaseReady=true;
+    setErr("—");
+    return true;
+  }
 
-    async function writeStatus(val){
-      if (!syncOn || !supabaseReady) return;
-      const cols = statusCols();
-      const iso = nowIso();
-      const patch = {};
-      patch[cols.statusCol] = val;
-      patch[cols.timeCol] = iso;
-      patch.updated_at = iso;
+  async function ensureRoomRow(){
+    const payload = { room_id: roomId, updated_at: nowIso() };
+    const res = await sb.from(TABLE).upsert(payload, { onConflict:"room_id" });
+    if (res.error) throw res.error;
+  }
 
+  function statusCols(){
+    if (role === "naco") return { statusCol:"naco_status", timeCol:"naco_status_updated_at" };
+    return { statusCol:"user_status", timeCol:"user_status_updated_at" };
+  }
+
+  function canWrite(){
+    if (!syncOn || !supabaseReady) return false;
+    if (!isUnlocked()){ setErr("LOCK未解除（合言葉を入れて解除）"); return false; }
+    return true;
+  }
+
+  async function writeStatus(val){
+    if (!canWrite()) return;
+    const cols = statusCols();
+    const iso = nowIso();
+    const patch = { updated_at: iso };
+    patch[cols.statusCol] = val;
+    patch[cols.timeCol] = iso;
+
+    const res = await sb.from(TABLE).update(patch).eq("room_id", roomId);
+    if (res.error){ console.warn("[writeStatus] error", res.error); setErrFromStatus(res.error.status, "更新失敗"); }
+  }
+
+  async function writeLife(val){
+    if (!canWrite()) return;
+    if (role !== "naco"){ setErr("生活は「なこ」側のみ"); return; }
+    const iso = nowIso();
+    const patch = { updated_at: iso, naco_life: val, naco_life_updated_at: iso };
+    const res = await sb.from(TABLE).update(patch).eq("room_id", roomId);
+    if (res.error){ console.warn("[writeLife] error", res.error); setErrFromStatus(res.error.status, "生活: カラム未追加"); }
+  }
+
+  async function addTea(){
+    if (!canWrite()) return;
+    const iso = nowIso();
+    const next = (parseInt(teaCount.textContent || "0", 10) || 0) + 1;
+    const patch = { updated_at: iso, tea_count: next, tea_updated_at: iso };
+    const res = await sb.from(TABLE).update(patch).eq("room_id", roomId);
+    if (res.error){ console.warn("[addTea] error", res.error); setErrFromStatus(res.error.status, "お茶: カラム未追加"); }
+  }
+
+  async function saveMemo(text){
+    if (!canWrite()) return;
+    const iso = nowIso();
+    const patch = { updated_at: iso, shared_memo: text, shared_memo_updated_at: iso };
+    const res = await sb.from(TABLE).update(patch).eq("room_id", roomId);
+    if (res.error){ console.warn("[saveMemo] error", res.error); setErrFromStatus(res.error.status, "メモ: カラム未追加"); }
+    else{
+      memoSaved.textContent = "保存した";
+      setTimeout(()=>memoSaved.textContent="—", 900);
+    }
+  }
+
+  async function heartbeat(){
+    if (!syncOn || !supabaseReady) return;
+
+    const iso = nowIso();
+    const isHost = (role === "naco");
+    const lastSeenCol = isHost ? "host_last_seen" : "guest_last_seen";
+
+    if (presenceMode !== "status_time"){
+      const patch = { updated_at: iso };
+      patch[lastSeenCol] = iso;
       const res = await sb.from(TABLE).update(patch).eq("room_id", roomId);
-      if (res.error){
-        console.warn("[writeStatus] error", res.error);
-        setErrFromStatus(res.error.status, "更新失敗");
-      }
+      if (!res.error){ presenceMode = "last_seen"; return; }
+      presenceMode = "status_time";
     }
 
-    async function heartbeat(){
-      if (!syncOn || !supabaseReady) return;
+    const cols = statusCols();
+    const current = isHost ? nacoNow.textContent : guestNow.textContent;
+    const patch2 = { updated_at: iso };
+    patch2[cols.statusCol] = (current && current !== "—") ? current : null;
+    patch2[cols.timeCol] = iso;
+    await sb.from(TABLE).update(patch2).eq("room_id", roomId);
+  }
 
-      const iso = nowIso();
-      const isHost = (role === "naco");
-      const lastSeenCol = isHost ? "host_last_seen" : "guest_last_seen";
-
-      if (presenceMode !== "status_time"){
-        const patch = {};
-        patch[lastSeenCol] = iso;
-        patch.updated_at = iso;
-
-        const res = await sb.from(TABLE).update(patch).eq("room_id", roomId);
-        if (!res.error){
-          presenceMode = "last_seen";
-          return;
-        }
-        console.warn("[heartbeat last_seen] fallback", res.error);
-        presenceMode = "status_time";
-      }
-
-      const cols = statusCols();
-      const current = isHost ? nacoNow.textContent : guestNow.textContent;
-      const patch2 = {};
-      patch2[cols.statusCol] = (current && current !== "—") ? current : null;
-      patch2[cols.timeCol] = iso;
-      patch2.updated_at = iso;
-
-      await sb.from(TABLE).update(patch2).eq("room_id", roomId);
+  function calcPresence(row){
+    const now = Date.now();
+    if (row && (row.host_last_seen || row.guest_last_seen)){
+      const hostAlive = row.host_last_seen && (now - Date.parse(row.host_last_seen) < TTL_MS);
+      const guestAlive = row.guest_last_seen && (now - Date.parse(row.guest_last_seen) < TTL_MS);
+      return `${(hostAlive?1:0)+(guestAlive?1:0)}/2`;
     }
+    const nacoAlive  = row?.naco_status_updated_at && (now - Date.parse(row.naco_status_updated_at) < TTL_MS);
+    const guestAlive = row?.user_status_updated_at && (now - Date.parse(row.user_status_updated_at) < TTL_MS);
+    return `${(nacoAlive?1:0)+(guestAlive?1:0)}/2`;
+  }
 
-    function calcPresence(row){
-      const now = Date.now();
-      if (row && (row.host_last_seen || row.guest_last_seen)){
-        const hostAlive = row.host_last_seen && (now - Date.parse(row.host_last_seen) < TTL_MS);
-        const guestAlive = row.guest_last_seen && (now - Date.parse(row.guest_last_seen) < TTL_MS);
-        const count = (hostAlive?1:0) + (guestAlive?1:0);
-        return count + "/2";
-      }
-      const nacoAlive  = row && row.naco_status_updated_at && (now - Date.parse(row.naco_status_updated_at) < TTL_MS);
-      const guestAlive = row && row.user_status_updated_at && (now - Date.parse(row.user_status_updated_at) < TTL_MS);
-      const count2 = (nacoAlive?1:0) + (guestAlive?1:0);
-      return count2 + "/2";
+  function fmtLocal(iso){
+    if (!iso) return "—";
+    try{ return new Date(iso).toLocaleString(); }catch{ return "—"; }
+  }
+
+  async function poll(){
+    if (!syncOn || !supabaseReady) return;
+
+    const cols = "room_id,updated_at,naco_status,naco_status_updated_at,user_status,user_status_updated_at,host_last_seen,guest_last_seen,naco_life,naco_life_updated_at,tea_count,tea_updated_at,shared_memo,shared_memo_updated_at";
+    let res = await sb.from(TABLE).select(cols).eq("room_id", roomId).maybeSingle();
+    if (res.error){
+      const fallback = "room_id,updated_at,naco_status,naco_status_updated_at,user_status,user_status_updated_at,host_last_seen,guest_last_seen";
+      res = await sb.from(TABLE).select(fallback).eq("room_id", roomId).maybeSingle();
     }
+    if (res.error){ console.warn("[poll] error", res.error); setErrFromStatus(res.error.status, "取得失敗"); return; }
+    if (!res.data) return;
 
-    async function poll(){
-      if (!syncOn || !supabaseReady) return;
+    const d = res.data;
+    nacoNow.textContent = d.naco_status || "—";
+    guestNow.textContent = d.user_status || "—";
+    lastUpdateText.textContent = d.updated_at ? new Date(d.updated_at).toLocaleString() : "—";
+    presenceText.textContent = calcPresence(d);
 
-      const baseCols = "room_id,updated_at,naco_status,naco_status_updated_at,user_status,user_status_updated_at";
-      const sel1 = baseCols + ",host_last_seen,guest_last_seen";
-
-      let res = await sb.from(TABLE).select(sel1).eq("room_id", roomId).maybeSingle();
-      if (res.error){
-        res = await sb.from(TABLE).select(baseCols).eq("room_id", roomId).maybeSingle();
-      }
-      if (res.error){
-        console.warn("[poll] error", res.error);
-        setErrFromStatus(res.error.status, "取得失敗");
-        return;
-      }
-      if (!res.data) return;
-
-      const data = res.data;
-      nacoNow.textContent = data.naco_status || "—";
-      guestNow.textContent = data.user_status || "—";
-      lastUpdateText.textContent = data.updated_at ? new Date(data.updated_at).toLocaleString() : "—";
-      presenceText.textContent = calcPresence(data);
+    if (d.naco_life !== undefined){
+      lifeNow.textContent = d.naco_life || "—";
+      lifeAt.textContent = d.naco_life_updated_at ? " / " + fmtLocal(d.naco_life_updated_at) : "";
     }
-
-    function startPolling(){ stopPolling(); poll(); pollTimer = setInterval(poll, 2500); }
-    function stopPolling(){ if (pollTimer) clearInterval(pollTimer); pollTimer=null; }
-    function startHeartbeat(){ stopHeartbeat(); heartbeat(); hbTimer = setInterval(heartbeat, 25000); }
-    function stopHeartbeat(){ if (hbTimer) clearInterval(hbTimer); hbTimer=null; }
-
-    async function startSync(){
-      roomId = getHashRoomId();
-      roomText.textContent = roomId || "—";
-      if (!roomId){ setErr("roomIdが無い（URLに #roomId を付けて）"); setSyncUI(false); return; }
-
-      pushRecentRoom(roomId);
-
-      const ok = await initSupabase();
-      if (!ok){ setSyncUI(false); return; }
-
-      try{ await ensureRoomRow(); }
-      catch(e){
-        console.error("[ensureRoomRow] failed", e);
-        setErrFromStatus(e && e.status, "room作成失敗");
-        setSyncUI(false);
-        return;
-      }
-
-      startHeartbeat();
-      startPolling();
+    if (d.tea_count !== undefined){
+      teaCount.textContent = String(d.tea_count || 0);
+      teaAt.textContent = fmtLocal(d.tea_updated_at);
     }
+    if (d.shared_memo !== undefined){
+      if (document.activeElement !== memoInput) memoInput.value = d.shared_memo || "";
+      memoAt.textContent = fmtLocal(d.shared_memo_updated_at);
+    }
+  }
 
-    function stopSync(){ stopPolling(); stopHeartbeat(); }
+  function startPolling(){ stopPolling(); poll(); pollTimer = setInterval(poll, 2500); }
+  function stopPolling(){ if (pollTimer) clearInterval(pollTimer); pollTimer=null; }
+  function startHeartbeat(){ stopHeartbeat(); heartbeat(); hbTimer = setInterval(heartbeat, 25000); }
+  function stopHeartbeat(){ if (hbTimer) clearInterval(hbTimer); hbTimer=null; }
 
-    async function toggleSync(){
-      const next = !syncOn;
-      setSyncUI(next);
-      if (next) await startSync();
-      else stopSync();
-    }
+  async function startSync(){
+    roomId = getHashRoomId();
+    roomText.textContent = roomId || "—";
+    updateLockUI();
+    if (!roomId){ setErr("roomIdが無い（URLに #roomId を付けて）"); setSyncUI(false); return; }
+    pushRecentRoom(roomId);
 
-    function buildStatusButtons(container, items, onClick){
-      container.innerHTML = "";
-      for (let i=0;i<items.length;i++){
-        const label = items[i];
-        const b = document.createElement("button");
-        b.className = "btn small";
-        b.textContent = label;
-        b.addEventListener("click", () => onClick(label));
-        container.appendChild(b);
-      }
-    }
+    const ok = await initSupabase();
+    if (!ok){ setSyncUI(false); return; }
 
-    // Pomodoro
-    let soundOn = true;
-    let audioUnlocked = false;
-    let tickTimer = null;
-    let remainingSec = 25 * 60;
-    let presetWork = 25 * 60;
-    let presetBreak = 5 * 60;
-    let mode = "WORK";
-    let pomo = 0;
-    const pomoGoal = 6;
+    try{ await ensureRoomRow(); }
+    catch(e){ setErrFromStatus(e?.status, "room作成失敗"); setSyncUI(false); return; }
 
-    function setTimerText(){
-      const m = String(Math.floor(remainingSec / 60)).padStart(2, "0");
-      const s = String(remainingSec % 60).padStart(2, "0");
-      timerText.textContent = m + ":" + s;
-      modeText.textContent = mode;
-      pomoText.textContent = String(pomo);
-      pomoGoalText.textContent = String(pomoGoal);
-      soundText.textContent = soundOn ? "ON" : "OFF";
-    }
-    function beep(){
-      if (!soundOn || !audioUnlocked) return;
-      try{
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.type = "sine"; o.frequency.value = 880; g.gain.value = 0.06;
-        o.connect(g); g.connect(ctx.destination);
-        o.start();
-        setTimeout(() => { o.stop(); ctx.close(); }, 180);
-      }catch(e){}
-    }
-    async function unlockAudioOnce(){
-      if (audioUnlocked) return;
-      audioUnlocked = true;
-      try{
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        await ctx.resume(); await ctx.close();
-      }catch(e){}
-    }
-    function stopTick(){ if (tickTimer) clearInterval(tickTimer); tickTimer=null; $("btnStart").textContent="はじめる"; }
-    function startTick(){
-      if (tickTimer) return;
-      $("btnStart").textContent="とめる";
-      tickTimer = setInterval(() => {
-        remainingSec = Math.max(0, remainingSec - 1);
-        setTimerText();
-        if (remainingSec === 0){ stopTick(); beep(); nextPhase(); }
-      }, 1000);
-    }
-    function nextPhase(){
-      if (mode === "WORK"){ mode="BREAK"; remainingSec = presetBreak; pomo += 1; }
-      else { mode="WORK"; remainingSec = presetWork; }
+    startHeartbeat();
+    startPolling();
+  }
+  function stopSync(){ stopPolling(); stopHeartbeat(); }
+
+  async function toggleSync(){
+    const next = !syncOn;
+    setSyncUI(next);
+    if (next) await startSync();
+    else stopSync();
+  }
+
+  function buildButtons(container, items, cb){
+    container.innerHTML = "";
+    items.forEach(label=>{
+      const b = document.createElement("button");
+      b.className = "btn small";
+      b.textContent = label;
+      b.addEventListener("click", ()=>cb(label));
+      container.appendChild(b);
+    });
+  }
+
+  async function unlockAudioOnce(){
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      await ctx.resume(); await ctx.close();
+    }catch{}
+  }
+  function beep(){
+    if (!soundOn || !audioUnlocked) return;
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine"; o.frequency.value = 880; g.gain.value = 0.06;
+      o.connect(g); g.connect(ctx.destination);
+      o.start();
+      setTimeout(()=>{ o.stop(); ctx.close(); }, 180);
+    }catch{}
+  }
+  function setTimerText(){
+    const m = String(Math.floor(remainingSec / 60)).padStart(2, "0");
+    const s = String(remainingSec % 60).padStart(2, "0");
+    timerText.textContent = `${m}:${s}`;
+    modeText.textContent = mode;
+    pomoText.textContent = String(pomo);
+    pomoGoalText.textContent = String(pomoGoal);
+    soundText.textContent = soundOn ? "ON" : "OFF";
+  }
+  function stopTick(){ if (tickTimer) clearInterval(tickTimer); tickTimer=null; $("btnStart").textContent="はじめる"; }
+  function startTick(){
+    if (tickTimer) return;
+    $("btnStart").textContent="とめる";
+    tickTimer = setInterval(()=>{
+      remainingSec = Math.max(0, remainingSec - 1);
       setTimerText();
-    }
-    function resetTimer(){ stopTick(); mode="WORK"; pomo=0; remainingSec=presetWork; setTimerText(); }
-    function setPreset(str){
-      const parts = str.split("/");
-      const w = parseInt(parts[0],10);
-      const b = parseInt(parts[1],10);
-      presetWork = w*60; presetBreak = b*60; resetTimer();
-    }
+      if (remainingSec === 0){ stopTick(); beep(); nextPhase(); }
+    }, 1000);
+  }
+  function nextPhase(){
+    if (mode === "WORK"){ mode="BREAK"; remainingSec = presetBreak; pomo += 1; }
+    else { mode="WORK"; remainingSec = presetWork; }
+    setTimerText();
+  }
+  function resetTimer(){ stopTick(); mode="WORK"; pomo=0; remainingSec=presetWork; setTimerText(); }
+  function setPreset(str){
+    const [w,b] = str.split("/").map(x=>parseInt(x,10));
+    presetWork = w*60; presetBreak = b*60; resetTimer();
+  }
 
-    function copyShareLink(){
-      const rid = getHashRoomId();
-      if (!rid){ setErr("roomIdが無い"); return; }
-      copyText(buildShareUrl(rid));
-      flashCfg("リンクをコピーした");
-    }
+  function setTab(which){
+    const easy = which === "easy";
+    tabEasy.classList.toggle("active", easy);
+    tabDetail.classList.toggle("active", !easy);
+    panelEasy.classList.toggle("hidden", !easy);
+    panelDetail.classList.toggle("hidden", easy);
+  }
 
-    function createNewRoom(){
-      const rid = newRoomId();
-      location.hash = rid;
-      copyText(buildShareUrl(rid));
-      flashCfg("新規ルーム作成→リンクコピー");
-    }
+  function createNewRoom(){
+    const rid = newRoomId();
+    location.hash = rid;
+    copyText(buildShareUrl(rid));
+    unlockMsg.textContent = "新規ルーム→リンクコピー";
+    setTimeout(()=>unlockMsg.textContent="—", 1200);
+  }
+  function copyShareLink(){
+    const rid = getHashRoomId();
+    if (!rid){ setErr("roomIdが無い"); return; }
+    copyText(buildShareUrl(rid));
+    unlockMsg.textContent = "リンクをコピー";
+    setTimeout(()=>unlockMsg.textContent="—", 900);
+  }
 
-    function boot(){
-      roomId = getHashRoomId();
-      roomText.textContent = roomId || "—";
+  function boot(){
+    roomId = getHashRoomId();
+    roomText.textContent = roomId || "—";
+    setRoleUI(role);
+    updateLockUI();
 
-      setRoleUI(role);
+    cfgUrl.value = (localStorage.getItem(LS_URL) || "").trim();
+    cfgRememberKey.checked = readRememberFlag();
+    cfgKey.value = readKey();
+    if (urlPreview) urlPreview.textContent = cfgUrl.value || "—";
+    if (keyPreview) keyPreview.textContent = maskKey(readKey());
 
-      const rooms = parseRooms();
-      renderRecentRooms(rooms);
+    renderRecentRooms(parseRooms());
+    if (roomId) pushRecentRoom(roomId);
 
-      cfgUrl.value = (localStorage.getItem(LS_URL) || "").trim();
-      cfgRememberKey.checked = readRememberFlag();
-      cfgKey.value = readKey();
+    const savedSync = (localStorage.getItem(LS_SYNC) === "true");
+    setSyncUI(savedSync);
 
-      const savedSync = (localStorage.getItem(LS_SYNC) === "true");
-      setSyncUI(savedSync);
-
-      buildStatusButtons(guestButtons, STATUS_GUEST, async (label) => {
-        await unlockAudioOnce();
-        if (role !== "guest"){ setErr("ゲスト役に切替えて押して"); return; }
-        await writeStatus(label);
-      });
-      buildStatusButtons(nacoButtons, STATUS_NACO, async (label) => {
-        await unlockAudioOnce();
-        if (role !== "naco"){ setErr("なこ役に切替えて押して"); return; }
-        await writeStatus(label);
-      });
-
-      setTimerText();
-
-      $("btnCfgSave").addEventListener("click", async () => {
-        const u = (cfgUrl.value || "").trim();
-        const k = (cfgKey.value || "").trim();
-        const remember = !!cfgRememberKey.checked;
-
-        localStorage.setItem(LS_URL, u);
-        writeKey(k, remember);
-
-        sb = null;
-        supabaseReady = false;
-        presenceMode = "unknown";
-
-        urlPreview.textContent = u || "—";
-        keyPreview.textContent = maskKey(k);
-
-        flashCfg("保存した → SYNC ON");
-
-        stopSync();
-        setSyncUI(true);
-        await startSync();
-      });
-
-      $("btnCfgClear").addEventListener("click", () => {
-        localStorage.removeItem(LS_URL);
-        clearKey();
-
-        cfgUrl.value = "";
-        cfgKey.value = "";
-        cfgRememberKey.checked = false;
-
-        sb = null;
-        supabaseReady = false;
-        presenceMode = "unknown";
-
-        urlPreview.textContent = "—";
-        keyPreview.textContent = "—";
-
-        flashCfg("消した");
-        stopSync();
-        setSyncUI(false);
-      });
-
-      $("btnSync").addEventListener("click", async () => { await unlockAudioOnce(); await toggleSync(); });
-      $("btnCopyLink").addEventListener("click", async () => { await unlockAudioOnce(); copyShareLink(); });
-      $("btnNewRoom").addEventListener("click", async () => { await unlockAudioOnce(); createNewRoom(); });
-
-      $("btnRoleNaco").addEventListener("click", async () => { await unlockAudioOnce(); setRoleUI("naco"); });
-      $("btnRoleGuest").addEventListener("click", async () => { await unlockAudioOnce(); setRoleUI("guest"); });
-
-      $("btnStart").addEventListener("click", async () => { await unlockAudioOnce(); tickTimer ? stopTick() : startTick(); });
-      $("btnNext").addEventListener("click", async () => { await unlockAudioOnce(); nextPhase(); });
-      $("btnReset").addEventListener("click", async () => { await unlockAudioOnce(); resetTimer(); });
-      $("btnSound").addEventListener("click", async () => { await unlockAudioOnce(); soundOn = !soundOn; setTimerText(); });
-
-      const presetBtns = document.querySelectorAll("[data-preset]");
-      presetBtns.forEach((b) => {
-        b.addEventListener("click", async () => {
-          await unlockAudioOnce();
-          presetBtns.forEach(x=>x.classList.remove("active"));
-          b.classList.add("active");
-          setPreset(b.getAttribute("data-preset"));
-        });
-      });
-
-      const memoKey = "pw_memo_" + (roomId || "no_room");
-      $("btnMemoSave").addEventListener("click", () => {
-        const v = ($("memoInput").value || "");
-        localStorage.setItem(memoKey, v);
-        $("memoSaved").textContent = "保存した";
-        setTimeout(()=> $("memoSaved").textContent="—", 1200);
-      });
-      $("memoInput").value = localStorage.getItem(memoKey) || "";
-
-      urlPreview.textContent = (localStorage.getItem(LS_URL) || "").trim() || "—";
-      keyPreview.textContent = maskKey(readKey());
-
-      if (roomId) pushRecentRoom(roomId);
-
-      if (savedSync) startSync().catch(()=>{});
-    }
-
-    window.addEventListener("hashchange", () => {
-      stopSync();
-      setSyncUI(false);
-      boot();
+    buildButtons(guestButtons, STATUS_GUEST, async (label)=>{
+      await unlockAudioOnce();
+      if (role !== "guest"){ setErr("ゲスト役に切替えて押して"); return; }
+      await writeStatus(label);
+    });
+    buildButtons(nacoButtons, STATUS_NACO, async (label)=>{
+      await unlockAudioOnce();
+      if (role !== "naco"){ setErr("なこ役に切替えて押して"); return; }
+      await writeStatus(label);
     });
 
-    document.addEventListener("DOMContentLoaded", boot);
-    document.addEventListener("pointerdown", unlockAudioOnce, { once:true });
-  </script>
+    document.querySelectorAll("[data-life]").forEach(btn=>{
+      btn.addEventListener("click", async ()=>{
+        await unlockAudioOnce();
+        await writeLife(btn.getAttribute("data-life"));
+      });
+    });
+
+    $("btnTea").addEventListener("click", async ()=>{ await unlockAudioOnce(); await addTea(); });
+    $("btnMemoSave").addEventListener("click", async ()=>{ await unlockAudioOnce(); await saveMemo(memoInput.value || ""); });
+    $("btnMemoClear").addEventListener("click", async ()=>{ await unlockAudioOnce(); memoInput.value=""; await saveMemo(""); });
+
+    $("btnRoleNaco").addEventListener("click", async ()=>{ await unlockAudioOnce(); setRoleUI("naco"); });
+    $("btnRoleGuest").addEventListener("click", async ()=>{ await unlockAudioOnce(); setRoleUI("guest"); });
+
+    $("btnNewRoom").addEventListener("click", async ()=>{ await unlockAudioOnce(); createNewRoom(); });
+    $("btnCopyLink").addEventListener("click", async ()=>{ await unlockAudioOnce(); copyShareLink(); });
+
+    tabEasy.addEventListener("click", ()=>setTab("easy"));
+    tabDetail.addEventListener("click", ()=>setTab("detail"));
+
+    btnUnlock.addEventListener("click", async ()=>{ await unlockAudioOnce(); setUnlocked(true); });
+    btnLock.addEventListener("click", async ()=>{ await unlockAudioOnce(); setUnlocked(false); });
+
+    $("btnCfgSave").addEventListener("click", async ()=>{
+      await unlockAudioOnce();
+      const u = (cfgUrl.value || "").trim();
+      const k = (cfgKey.value || "").trim();
+      const remember = !!cfgRememberKey.checked;
+
+      localStorage.setItem(LS_URL, u);
+      writeKey(k, remember);
+
+      sb = null; supabaseReady = false; presenceMode = "unknown";
+      if (urlPreview) urlPreview.textContent = u || "—";
+      if (keyPreview) keyPreview.textContent = maskKey(readKey());
+
+      stopSync();
+      setSyncUI(true);
+      await startSync();
+    });
+
+    $("btnCfgClear").addEventListener("click", async ()=>{
+      await unlockAudioOnce();
+      localStorage.removeItem(LS_URL);
+      clearKey();
+      cfgUrl.value = ""; cfgKey.value = ""; cfgRememberKey.checked = false;
+      sb = null; supabaseReady = false; presenceMode = "unknown";
+      if (urlPreview) urlPreview.textContent = "—";
+      if (keyPreview) keyPreview.textContent = "—";
+      stopSync(); setSyncUI(false);
+    });
+
+    $("btnSync").addEventListener("click", async ()=>{ await unlockAudioOnce(); await toggleSync(); });
+
+    setTimerText();
+    $("btnStart").addEventListener("click", async ()=>{ await unlockAudioOnce(); tickTimer ? stopTick() : startTick(); });
+    $("btnNext").addEventListener("click", async ()=>{ await unlockAudioOnce(); nextPhase(); });
+    $("btnReset").addEventListener("click", async ()=>{ await unlockAudioOnce(); resetTimer(); });
+    $("btnSound").addEventListener("click", async ()=>{ await unlockAudioOnce(); soundOn = !soundOn; setTimerText(); });
+
+    const presetBtns = document.querySelectorAll("[data-preset]");
+    presetBtns.forEach(b=>{
+      b.addEventListener("click", async ()=>{
+        await unlockAudioOnce();
+        presetBtns.forEach(x=>x.classList.remove("active"));
+        b.classList.add("active");
+        setPreset(b.getAttribute("data-preset"));
+      });
+    });
+
+    if (savedSync) startSync().catch(()=>{});
+  }
+
+  window.addEventListener("hashchange", ()=>{
+    stopSync();
+    setSyncUI(false);
+    boot();
+  });
+
+  document.addEventListener("DOMContentLoaded", boot);
+  document.addEventListener("pointerdown", unlockAudioOnce, { once:true });
+</script>
 </body>
 </html>
+"""
+
+out_path = Path("/mnt/data/index_v6_ui_1_3.html")
+out_path.write_text(html, encoding="utf-8")
+str(out_path)
