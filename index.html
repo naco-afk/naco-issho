@@ -1,6 +1,4 @@
-from pathlib import Path
-
-html = """<!doctype html>
+<!doctype html>
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
@@ -370,7 +368,7 @@ alter table public.naco_rooms<br>
     return k.slice(0, 14) + "…" + k.slice(-6);
   }
   function isValidSupabaseUrl(url){
-    const re = new RegExp("^https://[a-z0-9-]+\\.supabase\\.co/?$");
+    const re = new RegExp("^https://[a-z0-9-]+\.supabase\.co/?$");
     return typeof url === "string" && re.test((url || "").trim());
   }
   function readRememberFlag(){ return (localStorage.getItem(LS_REMEMBER) === "true"); }
@@ -473,11 +471,11 @@ alter table public.naco_rooms<br>
     if (urlPreview) urlPreview.textContent = u0 || "—";
     if (keyPreview) keyPreview.textContent = maskKey(k);
 
-    if (!u0 or !k){ supabaseReady=false; setErr("未設定: URLまたはKEYが空"); return false; }
+    if (!u0 || !k){ supabaseReady=false; setErr("未設定: URLまたはKEYが空"); return false; }
     if (!isValidSupabaseUrl(u0)){ supabaseReady=false; setErr("SupabaseURL形式が不正（末尾 / OK）"); return false; }
 
-    if (sb and supabaseReady) return true;
-    const u = u0.replace(/\\/+$/,"");
+    if (sb && supabaseReady) return true;
+    const u = u0.replace(/\/+$/,"");
     sb = createClient(u, k, { auth:{ persistSession:false, autoRefreshToken:false } });
 
     const ping = await sb.from(TABLE).select("room_id").limit(1);
@@ -850,8 +848,3 @@ alter table public.naco_rooms<br>
 </script>
 </body>
 </html>
-"""
-
-out_path = Path("/mnt/data/index_v6_ui_1_3.html")
-out_path.write_text(html, encoding="utf-8")
-str(out_path)
