@@ -1,6 +1,4 @@
-from pathlib import Path
-
-html = """<!doctype html>
+<!doctype html>
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
@@ -288,7 +286,7 @@ html = """<!doctype html>
     function nowIso(){ return new Date().toISOString(); }
 
     function isValidSupabaseUrl(url){
-      const re = new RegExp("^https://[a-z0-9-]+\\.supabase\\.co/?$");
+      const re = new RegExp("^https://[a-z0-9-]+\.supabase\.co/?$");
       return typeof url === "string" && re.test(url.trim());
     }
 
@@ -769,8 +767,3 @@ html = """<!doctype html>
   </script>
 </body>
 </html>
-"""
-
-out_path = Path("/mnt/data/index_v5_base_fixed.html")
-out_path.write_text(html, encoding="utf-8")
-str(out_path)
