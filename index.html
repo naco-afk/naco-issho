@@ -1042,14 +1042,22 @@ on("toggleRole","click", () => {
       .maybeSingle();
     if (error) throw error;
     if (!data) return;
-    if (typeof data.user_status === "string" && data.user_status_updated_at){
+    const isHost = (role === "host");
+    // 自分のステータスはpullで上書きしない（自分が押したものを守る）
+    // host = naco_status が自分、user_status が相手
+    // guest = user_status が自分、naco_status が相手
+    if (!isHost && typeof data.user_status === "string" && data.user_status_updated_at){
+      // guest の自分側は pull しない
+    } else if (typeof data.user_status === "string" && data.user_status_updated_at){
       const localAt = load("user_status_at", null);
       if (!localAt || new Date(data.user_status_updated_at).getTime() > new Date(localAt).getTime()){
         save("user_status", data.user_status || "");
         save("user_status_at", data.user_status_updated_at);
       }
     }
-    if (typeof data.naco_status === "string" && data.naco_status_updated_at){
+    if (isHost && typeof data.naco_status === "string" && data.naco_status_updated_at){
+      // host の自分側は pull しない
+    } else if (typeof data.naco_status === "string" && data.naco_status_updated_at){
       const localAt = load("naco_status_at", null);
       if (!localAt || new Date(data.naco_status_updated_at).getTime() > new Date(localAt).getTime()){
         save("naco_status", data.naco_status || "");
@@ -1085,8 +1093,8 @@ on("toggleRole","click", () => {
     // This avoids overwriting status_updated_at, which is used for status sync logic.
     const isHost = (role === "host");
     const patch = isHost
-      ? { room_id: room, last_active_host: nowIso, updated_at: nowIso }
-      : { room_id: room, last_active_guest: nowIso, updated_at: nowIso };
+      ? { room_id: room, last_active_host: nowIso }
+      : { room_id: room, last_active_guest: nowIso };
     try{
       const { error } = await sb.from("naco_rooms").upsert(patch, { onConflict:"room_id" });
       if (error) throw error;
@@ -1119,11 +1127,22 @@ on("toggleRole","click", () => {
           (payload) => {
             const r = payload.new || {};
 
-            if (typeof r.user_status === "string"){
+            const isHost = (role === "host");
+            // 自分のステータスはリアルタイム受信でも上書きしない
+            if (!isHost && typeof r.user_status === "string"){
               save("user_status", r.user_status || "");
               save("user_status_at", r.user_status_updated_at || new Date().toISOString());
             }
-            if (typeof r.naco_status === "string"){
+            if (isHost && typeof r.naco_status === "string"){
+              save("naco_status", r.naco_status || "");
+              save("naco_status_at", r.naco_status_updated_at || new Date().toISOString());
+            }
+            // 相手のステータスは受け取る
+            if (isHost && typeof r.user_status === "string"){
+              save("user_status", r.user_status || "");
+              save("user_status_at", r.user_status_updated_at || new Date().toISOString());
+            }
+            if (!isHost && typeof r.naco_status === "string"){
               save("naco_status", r.naco_status || "");
               save("naco_status_at", r.naco_status_updated_at || new Date().toISOString());
             }
