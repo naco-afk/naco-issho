@@ -611,8 +611,8 @@
 
   const renderPresence = () => {
     const now = Date.now();
-    const hostAt = ts(load("naco_status_at", null));   // なこ側の心拍
-    const guestAt = ts(load("user_status_at", null)); // ゲスト側の心拍
+    const hostAt = ts(load("last_active_host_at", null));   // なこ側の心拍（専用カラム）
+    const guestAt = ts(load("last_active_guest_at", null)); // ゲスト側の心拍（専用カラム）
     const hostOn = hostAt && (now - hostAt) < PRESENCE_WINDOW_MS;
     const guestOn = guestAt && (now - guestAt) < PRESENCE_WINDOW_MS;
     const on = (hostOn ? 1 : 0) + (guestOn ? 1 : 0);
@@ -1037,7 +1037,7 @@ on("toggleRole","click", () => {
   const pullStatusesRemote = async () => {
     if (!supabaseReady) return;
     const { data, error } = await sb.from("naco_rooms")
-      .select("room_id,user_status,user_status_updated_at,naco_status,naco_status_updated_at,updated_at")
+      .select("room_id,user_status,user_status_updated_at,naco_status,naco_status_updated_at,last_active_host,last_active_guest,updated_at")
       .eq("room_id", room)
       .maybeSingle();
     if (error) throw error;
@@ -1056,6 +1056,9 @@ on("toggleRole","click", () => {
         save("naco_status_at", data.naco_status_updated_at);
       }
     }
+    // last_active 専用カラムを取得してPresenceに反映
+    if (data.last_active_host) save("last_active_host_at", data.last_active_host);
+    if (data.last_active_guest) save("last_active_guest_at", data.last_active_guest);
     renderStatuses();
   };
 
@@ -1078,17 +1081,17 @@ on("toggleRole","click", () => {
   const pingRoleRemote = async () => {
     if (!supabaseReady) return;
     const nowIso = new Date().toISOString();
-    // Use status_updated_at columns as "last_active" heartbeats.
-    // IMPORTANT: update only your own columns to avoid overwriting the other person's state.
+    // Use dedicated last_active columns for heartbeats only.
+    // This avoids overwriting status_updated_at, which is used for status sync logic.
     const isHost = (role === "host");
     const patch = isHost
-      ? { room_id: room, naco_status: load("naco_status","") || "", naco_status_updated_at: nowIso, updated_at: nowIso }
-      : { room_id: room, user_status: load("user_status","") || "", user_status_updated_at: nowIso, updated_at: nowIso };
+      ? { room_id: room, last_active_host: nowIso, updated_at: nowIso }
+      : { room_id: room, last_active_guest: nowIso, updated_at: nowIso };
     try{
       const { error } = await sb.from("naco_rooms").upsert(patch, { onConflict:"room_id" });
       if (error) throw error;
-      // mirror heartbeat locally so presence updates immediately
-      if (isHost) save("naco_status_at", nowIso); else save("user_status_at", nowIso);
+      // ローカルにも反映してrenderPresenceが即時動くようにする
+      if (isHost) save("last_active_host_at", nowIso); else save("last_active_guest_at", nowIso);
       renderPresence();
     }catch(e){
       // keep UI calm; ERR pill will show
@@ -1124,7 +1127,11 @@ on("toggleRole","click", () => {
               save("naco_status", r.naco_status || "");
               save("naco_status_at", r.naco_status_updated_at || new Date().toISOString());
             }
+            // last_active 専用カラムを受け取ってPresenceに反映
+            if (r.last_active_host) save("last_active_host_at", r.last_active_host);
+            if (r.last_active_guest) save("last_active_guest_at", r.last_active_guest);
             renderStatuses();
+            renderPresence();
           })
         .subscribe();
     }catch(e){}
