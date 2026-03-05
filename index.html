@@ -93,7 +93,6 @@
   
     /* now pill */
     #nowPill{white-space:nowrap}
-    @media (max-width: 680px){ #nowPill{display:none} }
 
     /* header polish */
     #headerRight{gap:8px}
@@ -251,7 +250,7 @@
       <span class="pill" id="syncPill">SYNC: <span id="syncState" class="mono">OFF</span></span>
       <button class="btn small" id="toggleSync">切替</button>
       <span class="pill">ERR: <span id="errText" class="mono">—</span></span>
-      <span class="pill" id="nowPill" style="display:none;">🗓 <span id="nowDate" class="mono">—</span> <span class="mono" id="nowTime">—</span> <span id="moonText">—</span></span>
+      <span class="pill" id="nowPill">🗓 <span id="nowDate" class="mono">—</span> <span class="mono" id="nowTime">—</span> <span id="moonText">—</span></span>
       <button class="btn small" id="themeToggle">☀︎/🌙</button>
       <button class="btn small" id="copyLink">🔗 共有</button>
       <!-- hidden but referenced by JS -->
